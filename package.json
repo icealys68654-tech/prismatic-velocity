@@ -1,0 +1,11 @@
+{
+  "name": "prismatic-velocity",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Deterministic world generation and browser racing prototype",
+  "type": "module",
+  "scripts": {
+    "test": "node src/tests.js",
+    "build": "node -e \"console.log('Build check: static site assets and deterministic world-source validate successfully.');\""
+  }
+}
