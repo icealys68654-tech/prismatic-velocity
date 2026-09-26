@@ -14,6 +14,30 @@ const coordinator = new IntegrationCoordinator({
 const provenance = { source_artifact:"seed.png", seed, algorithm_version:"1", grid_resolution:"64x64", generated_at:new Date().toISOString(), generator:"Transmutation World / Prismatic Velocity" };
 console.info("PROVENANCE", provenance, { coordinator, PRISMATIC_SEED_VERSION });
 
+const adapterState = {
+  boa: "idle",
+  holocron: "idle",
+  lastError: null,
+  frameCount: 0,
+};
+
+const statusEl = document.getElementById("status");
+const adapterEl = document.createElement("div");
+adapterEl.id = "adapter-status";
+adapterEl.style.marginTop = "8px";
+adapterEl.style.fontSize = "11px";
+adapterEl.style.opacity = "0.9";
+statusEl.appendChild(adapterEl);
+
+function refreshAdapterStatus() {
+  adapterEl.textContent = `ADAPTERS: BOA ${adapterState.boa.toUpperCase()} • HOLOCRON ${adapterState.holocron.toUpperCase()}`;
+  if (adapterState.lastError) {
+    adapterEl.title = adapterState.lastError;
+  } else {
+    adapterEl.title = "Adapters online";
+  }
+}
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x02030a);
 scene.fog = new THREE.FogExp2(0x030817, 0.00075);
@@ -142,6 +166,51 @@ function updateBike(obj,t,offset){
   obj.rotation.z += Math.sin(performance.now()*.008)*.025;
 }
 
+async function runAdapters(snapshot) {
+  const input = { keys: { ...keys } };
+  try {
+    adapterState.boa = "running";
+    refreshAdapterStatus();
+    await coordinator.executeBoaWorkflow({
+      input,
+      deltaTime: snapshot.deltaTime,
+    });
+    adapterState.boa = "ok";
+    adapterState.lastError = null;
+  } catch (error) {
+    adapterState.boa = "error";
+    adapterState.lastError = error?.message || String(error);
+    console.warn("BOA adapter failed", error);
+  }
+
+  try {
+    adapterState.holocron = "running";
+    refreshAdapterStatus();
+    await coordinator.executeHolocronAbstraction({
+      items: [{ id: "race-state", ...snapshot }],
+      query: "prismatic-velocity",
+      bindings: {
+        B: 0,
+        A: 1,
+        Y: 2,
+        X: 3,
+        L: 4,
+        R: 5,
+        Select: 8,
+        Start: 9,
+      },
+    });
+    adapterState.holocron = "ok";
+    adapterState.lastError = null;
+  } catch (error) {
+    adapterState.holocron = "error";
+    adapterState.lastError = error?.message || String(error);
+    console.warn("HOLOCRON adapter failed", error);
+  }
+
+  refreshAdapterStatus();
+}
+
 let prev=performance.now();
 function animate(now){
   requestAnimationFrame(animate);
@@ -188,27 +257,14 @@ function animate(now){
     timestamp: now,
   };
   coordinator.updateGameState(snapshot);
-  void coordinator.executeBoaWorkflow({
-    input: { keys: { ...keys } },
-    deltaTime: dt,
-  });
-  void coordinator.executeHolocronAbstraction({
-    items: [{ id: "race-state", ...snapshot }],
-    query: "prismatic-velocity",
-    bindings: {
-      B: 0,
-      A: 1,
-      Y: 2,
-      X: 3,
-      L: 4,
-      R: 5,
-      Select: 8,
-      Start: 9,
-    },
-  });
+  adapterState.frameCount += 1;
+  if (adapterState.frameCount % 6 === 0) {
+    void runAdapters(snapshot);
+  }
 
   composer.render();
 }
+refreshAdapterStatus();
 animate(performance.now());
 
 addEventListener("resize",()=>{
