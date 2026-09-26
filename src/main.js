@@ -4,6 +4,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { seedFromImage, PRISMATIC_SEED_VERSION } from "./seed.js";
 import { IntegrationCoordinator } from "./integrations.js";
+import { generateSourceWorld, elementColor, terrainHeightFromCell } from "./world-source.js";
 
 const seed = await seedFromImage("./seed.png");
 const coordinator = new IntegrationCoordinator({
@@ -11,7 +12,8 @@ const coordinator = new IntegrationCoordinator({
   seed,
   version: PRISMATIC_SEED_VERSION,
 });
-const provenance = { source_artifact:"seed.png", seed, algorithm_version:"1", grid_resolution:"64x64", generated_at:new Date().toISOString(), generator:"Transmutation World / Prismatic Velocity" };
+const world = generateSourceWorld({ artifact: "seed.png", seed, width: 64, height: 64 });
+const provenance = world.provenance;
 console.info("PROVENANCE", provenance, { coordinator, PRISMATIC_SEED_VERSION });
 
 const adapterState = {
@@ -101,13 +103,13 @@ function makeTrack(){
 const track=makeTrack();
 
 function terrain(){
-  const g=new THREE.PlaneGeometry(5000,5000,180,180);
+  const g=new THREE.PlaneGeometry(5000,5000,63,63);
   const pos=g.attributes.position;
   for(let i=0;i<pos.count;i++){
-    const x=pos.getX(i), z=pos.getY(i);
-    const h=18*Math.sin(x*.006+seed*.00001)*Math.cos(z*.005)+
-      9*Math.sin(x*.021+z*.014)+4*Math.sin(x*.08-z*.06);
-    pos.setZ(i,h);
+    const x = i % 64;
+    const y = Math.floor(i / 64);
+    const cell = world.grid[y]?.[x] ?? world.grid[0][0];
+    pos.setZ(i, terrainHeightFromCell(cell));
   }
   g.rotateX(-Math.PI/2);
   const m=new THREE.MeshStandardMaterial({color:0x07121a,metalness:.05,roughness:.95});
@@ -121,8 +123,11 @@ function crystal(x,y,z,s,c){
   const o=new THREE.Mesh(g,m); o.position.set(x,y,z); o.rotation.set(rng()*2,rng()*2,rng()*2); scene.add(o);
 }
 for(let i=0;i<160;i++){
+  const cellX = (i * 11) % 64;
+  const cellY = (i * 7) % 64;
+  const cell = world.grid[cellY][cellX];
   const a=rng()*Math.PI*2, r=360+rng()*1300;
-  crystal(Math.cos(a)*r,10+rng()*100,Math.sin(a)*r,4+rng()*22,palette[(rng()*palette.length)|0]);
+  crystal(Math.cos(a)*r, 12 + cell.elevation * 110, Math.sin(a)*r, 4 + cell.elevation * 18, elementColor(cell.element));
 }
 
 function bike(color=0x00eaff){
