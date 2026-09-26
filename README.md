@@ -1,8 +1,34 @@
 # Prismatic Velocity
 
-A browser-playable, high-speed 3D combat-racing prototype inspired by futuristic arcade racers and generated from a prismatic world seed.
+A deterministic content-management and world-generation engine based on the **Prismatic Emergence** design. CMS artifacts are gathered as evidence, transformed into a seeded elemental field, and exposed as reproducible world data for a rendering adapter.
+
+This prototype applies that same model to a browser-playable, high-speed 3D combat-racing experience inspired by futuristic arcade racers and generated from a prismatic world seed.
 
 ![Prismatic Velocity](seed.png)
+
+## Status to completion
+
+- **Implemented:** deterministic artifact storage, filtering/gathering, mesh generation, 64×64 modal grids, seeded world generation, provenance contracts, reproducibility tests, and a renderer-neutral output adapter.
+- **CI workflow:** configured and green. GitHub Actions runs the real build and test commands on pushes to `main` and on pull requests.
+- **Current best next step:** add a concrete browser or native rendering adapter behind the exported `RenderAdapter` contract.
+
+The current verification gates are:
+
+```bash
+npm run build
+npm test
+```
+
+Latest CI workflow: https://github.com/icealys68654-tech/prismatic-velocity/actions/workflows/ci.yml
+
+## Pipeline
+
+```text
+CMS artifact -> FilterPipeline -> AIAgentGatherer -> MeshGeneratorAgent
+                                                 -> ModalGridAgent (64x64) -> height/material fields -> world
+```
+
+The implementation is intentionally dependency-free at runtime. The core can run on Node, in a worker, or behind a browser adapter. Rendering is represented by an ABI so WebGL, OpenGL, and Vulkan adapters can be added without changing generation logic.
 
 ## Highlights
 
@@ -43,6 +69,37 @@ No `npm install` step is needed: Three.js is referenced from jsDelivr in `index.
 | `Space` | Fire a plasma projectile |
 | `R` | Reset the player state |
 
+## Usage
+
+```typescript
+import { generateWorld, InMemoryContentStore } from "./src/index.js";
+
+const store = new InMemoryContentStore();
+const artifact = store.add({
+  id: "crystal-01",
+  title: "Crystal Basin",
+  body: "A warm volcanic basin surrounded by clear water and high stone ridges.",
+  tags: ["volcanic", "water", "crystal"],
+  metadata: { biome: "basin" }
+});
+
+const world = generateWorld(artifact, "question-42");
+console.log(world.provenance, world.heightfield.length);
+```
+
+`generateWorld(artifact, seed)` is deterministic. `generatedAt` is provenance only and is never read by the generator.
+
+## Contracts
+
+Every generated world includes:
+
+- `sourceArtifact`
+- `seed`
+- `algorithmVersion`
+- `gridResolution`
+- `generatedAt`
+- `generator`
+
 ## Project structure
 
 ```text
@@ -75,7 +132,7 @@ No `npm install` step is needed: Three.js is referenced from jsDelivr in `index.
 - `abstract()` for filtering items and preparing simulated core ABI, WebGL, and gamepad connector state.
 - `addFilter()`, `start()`, and `stop()` for runtime coordination.
 
-`IntegrationCoordinator` provides the higher-level interface used by `src/main.js`. Adapter calls are throttled to every sixth animation frame and status is shown in the HUD. If an eventual integration with the real SDKs is needed, these boundaries can be replaced without changing the core racing loop.
+`IntegrationCoordinator` provides the higher-level interface used by `src/main.js`. Adapter calls are throttled to every sixth animation frame and status is shown in the HUD. If an eventual integration target is connected, the adapters fall back to local compatibility shims instead of hard failing.
 
 The referenced external projects are:
 
@@ -101,9 +158,15 @@ The track and world decoration use the image-derived seed. Runtime timestamps ar
 
 Use a current browser with WebGL 2 support and JavaScript modules enabled. The initial load requires network access to fetch Three.js from jsDelivr unless the import map is changed to a local copy.
 
-## Development notes
+## Development
 
-This is an experimental visual prototype. There is currently no build pipeline, automated test suite, or server-side component. The application runs entirely in the browser; game state is not persisted between sessions.
+```bash
+npm install
+npm run build
+npm test
+```
+
+The test command compiles TypeScript and runs the compiled Node test files. GitHub Actions executes the same commands as the repository's CI gates.
 
 ## License
 
