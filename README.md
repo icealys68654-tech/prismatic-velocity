@@ -1,46 +1,56 @@
 # Prismatic Velocity
 
-A deterministic content-management and world-generation engine based on the **Prismatic Emergence** design. CMS artifacts are gathered as evidence, transformed into a seeded elemental field, and exposed as reproducible world data for a rendering adapter.
+A deterministic world-generation engine paired with a browser-playable 3D racing prototype. The system transforms a visual artifact into a seeded elemental field, then renders that field as playable terrain.
 
-This prototype applies that same model to a browser-playable, high-speed 3D combat-racing experience inspired by futuristic arcade racers and generated from a prismatic world seed.
+**Artifact → Seed → Elemental Field → 3D World**
 
 ![Prismatic Velocity](seed.png)
 
-## Status to completion
+## Core Design
 
-- **Implemented:** deterministic artifact storage, filtering/gathering, mesh generation, 64×64 modal grids, seeded world generation, provenance contracts, reproducibility tests, and a renderer-neutral output adapter.
-- **CI workflow:** configured and green. GitHub Actions runs the real build and test commands on pushes to `main` and on pull requests.
-- **Current best next step:** add a concrete browser or native rendering adapter behind the exported `RenderAdapter` contract.
+This prototype implements the **Prismatic Emergence** transmutation model:
 
-The current verification gates are:
+1. **Artifact as Question**: A visual seed (image) drives all generation.
+2. **Deterministic Seed**: Image hash → reproducible RNG state. Same artifact always produces the same world.
+3. **Elemental Field**: 64×64 grid where each cell holds an element (water, fire, earth, air) and derived terrain parameters.
+4. **Terrain Generation**: Element pressures map to height, moisture, temperature, and material properties.
+5. **Provenance**: Every generated world retains source artifact, seed, algorithm version, and grid resolution for reproducibility and inspection.
 
+The racing game is a **rendering adapter** over this deterministic source model—not the primary system.
+
+## Architecture
+
+```
+seed.png (artifact)
+    ↓
+seedFromImage() → deterministic seed
+    ↓
+generateSourceWorld() → 64×64 elemental grid
+    ↓
+terrain() → Three.js mesh with heights from pressures
+    ↓
+Playable world + bike racing
+```
+
+The world-source layer (`src/world-source.js`) is decoupled from rendering. It can be used independently for:
+- Procedural map generation
+- Level design tooling
+- Network synchronization
+- Offline world inspection
+
+## Status
+
+- **Implemented**: Deterministic artifact-to-seed hashing, 64×64 elemental field generation, height/material mapping, seeded crystal placement, and browser Three.js rendering.
+- **CI/CD**: Green. GitHub Actions runs build and test on push and pull request.
+- **Next**: Extended elemental rules (water flow, erosion, element interactions), testing harness for reproducibility across seeds, and optional Epic-Random-Maps deep integration.
+
+Verification gates:
 ```bash
 npm run build
 npm test
 ```
 
-Latest CI workflow: https://github.com/icealys68654-tech/prismatic-velocity/actions/workflows/ci.yml
-
-## Pipeline
-
-```text
-CMS artifact -> FilterPipeline -> AIAgentGatherer -> MeshGeneratorAgent
-                                                 -> ModalGridAgent (64x64) -> height/material fields -> world
-```
-
-The implementation is intentionally dependency-free at runtime. The core can run on Node, in a worker, or behind a browser adapter. Rendering is represented by an ABI so WebGL, OpenGL, and Vulkan adapters can be added without changing generation logic.
-
-## Highlights
-
-- Fast anti-gravity bike racing on a deterministic, looping roller-coaster track.
-- Procedural terrain, crystal fields, starfield, emissive materials, fog, dynamic lighting, shadows, ACES tone mapping, and Unreal-style bloom.
-- Player bike, nine AI riders, chase camera, plasma projectiles, nitro, shield HUD, and reset support.
-- Three.js `0.186.0`, loaded in the browser through an import map—no bundler or package installation is required.
-- The supplied `seed.png` is hashed by `src/seed.js` and used to derive the world seed.
-- A 64×64 provenance/grid concept is retained in the generated-world metadata.
-- Runtime adapter boundaries for `boa-bigapi-framework` and `HOLOCRON-Abstraction-SDK`, with safe local compatibility implementations.
-
-## Quick start
+## Quick Start
 
 The project uses browser ES modules, so open it through a local HTTP server rather than directly from `file://`.
 
@@ -50,7 +60,7 @@ python -m http.server 8080
 
 Open [http://localhost:8080/](http://localhost:8080/) in a WebGL-capable browser.
 
-Any static HTTP server can be used. For example, with Node.js tooling already available:
+Any static HTTP server works. For example, with Node.js:
 
 ```bash
 npx serve .
@@ -69,94 +79,119 @@ No `npm install` step is needed: Three.js is referenced from jsDelivr in `index.
 | `Space` | Fire a plasma projectile |
 | `R` | Reset the player state |
 
-## Usage
+## API Usage
 
-```typescript
-import { generateWorld, InMemoryContentStore } from "./src/index.js";
+### Generate a Deterministic World
 
-const store = new InMemoryContentStore();
-const artifact = store.add({
-  id: "crystal-01",
-  title: "Crystal Basin",
-  body: "A warm volcanic basin surrounded by clear water and high stone ridges.",
-  tags: ["volcanic", "water", "crystal"],
-  metadata: { biome: "basin" }
+```javascript
+import { generateSourceWorld } from "./src/world-source.js";
+
+const world = generateSourceWorld({
+  artifact: "seed.png",
+  seed: 0x12345678,
+  width: 64,
+  height: 64,
 });
 
-const world = generateWorld(artifact, "question-42");
-console.log(world.provenance, world.heightfield.length);
+console.log(world.provenance);
+// {
+//   source_artifact: "seed.png",
+//   seed: 305419896,
+//   algorithm_version: "1",
+//   grid_resolution: "64x64",
+//   generated_at: "2026-09-26T12:07:54.000Z",
+//   generator: "Epic-Random-Maps / Prismatic Velocity"
+// }
+
+console.log(world.grid[32][32]);
+// {
+//   x: 32,
+//   y: 32,
+//   element: "earth",
+//   elevation: 0.62,
+//   pressures: { water: 0.21, fire: 0.18, earth: 0.68, air: 0.35 },
+//   region: 7
+// }
 ```
 
-`generateWorld(artifact, seed)` is deterministic. `generatedAt` is provenance only and is never read by the generator.
+### Inspect Element Pressures
 
-## Contracts
+Each cell in the 64×64 grid maintains four elemental pressures that determine:
 
-Every generated world includes:
+- **Water**: Low elevation, high moisture, cool thermal regions.
+- **Fire**: High thermal pressure, rough terrain, boundary tension.
+- **Earth**: Structural stability, mountain/plateau formation.
+- **Air**: Elevated corridors, light transition zones.
 
-- `sourceArtifact`
-- `seed`
-- `algorithmVersion`
-- `gridResolution`
-- `generatedAt`
-- `generator`
+The element is chosen by highest pressure. Pressures are inspectable at runtime for debugging or tooling.
 
-## Project structure
+### Render Adapter
 
-```text
+`src/main.js` demonstrates a Three.js rendering adapter over the world-source. The adapter:
+- Reads the 64×64 grid
+- Maps element and elevation to mesh height
+- Applies element colors to crystal decoration
+- Preserves the racing loop and HUD as independent systems
+
+You can swap the renderer without touching the world generation logic.
+
+## Project Structure
+
+```
 .
-├── index.html          # HUD, styles, import map, and application entry point
-├── seed.png            # Source artifact used to derive the deterministic seed
+├── index.html              # Entry point, HUD styles, import map
+├── seed.png                # Visual artifact (hashed to produce seed)
+├── project.json            # Project metadata
 └── src/
-    ├── main.js         # Three.js scene, track, bikes, input, animation, and HUD
-    ├── seed.js         # Image hashing and seed/provenance helpers
-    ├── integrations.js  # BOA and HOLOCRON compatibility adapters
-    └── meshnet/
-        └── icosahedron-core.ts  # Prismatic icosahedron/PIN meshnet module
+    ├── main.js             # Three.js scene, bikes, track, racing loop
+    ├── seed.js             # Image hashing, seed derivation
+    ├── world-source.js     # Elemental field generation (core)
+    ├── integrations.js     # BOA and HOLOCRON adapter bindings
+    └── meshnet/            # (Future) Icosahedron mesh topology
 ```
 
-## Runtime integration
+## Determinism Contract
 
-`src/integrations.js` contains thin, fail-safe compatibility adapters rather than hard dependencies on external repositories.
+Same artifact + same seed → identical world.
+Different seed → different world.
 
-### BOA adapter
+This is testable:
 
-`BoaBigApiAdapter` exposes:
+```javascript
+const w1 = generateSourceWorld({ seed: 0x12345678 });
+const w2 = generateSourceWorld({ seed: 0x12345678 });
+console.assert(JSON.stringify(w1.grid) === JSON.stringify(w2.grid)); // true
 
-- `gather()` for a staged game-state workflow covering view, input, sequencing, modeling, packet, and frame processing.
-- `compute()` for pitch, roll, vertex indexing, and scatter operations.
-
-### HOLOCRON adapter
-
-`HolocronAbstractionAdapter` exposes:
-
-- `abstract()` for filtering items and preparing simulated core ABI, WebGL, and gamepad connector state.
-- `addFilter()`, `start()`, and `stop()` for runtime coordination.
-
-`IntegrationCoordinator` provides the higher-level interface used by `src/main.js`. Adapter calls are throttled to every sixth animation frame and status is shown in the HUD. If an eventual integration target is connected, the adapters fall back to local compatibility shims instead of hard failing.
-
-The referenced external projects are:
-
-- `somsung46813-creator/boa-bigapi-framework`
-- `somsung46813-creator/HOLOCRON-Abstraction-SDK`
-
-They are not installed or required to run this prototype.
-
-## Determinism and provenance
-
-The track and world decoration use the image-derived seed. Runtime timestamps are logged as provenance only and do not affect terrain generation.
-
-```json
-{
-  "source_artifact": "seed.png",
-  "algorithm_version": "1",
-  "grid_resolution": "64x64",
-  "generator": "Transmutation World / Prismatic Velocity"
-}
+const w3 = generateSourceWorld({ seed: 0x87654321 });
+console.assert(JSON.stringify(w1.grid) === JSON.stringify(w3.grid)); // false
 ```
 
-## Browser requirements
+## Epic-Random-Maps Integration
 
-Use a current browser with WebGL 2 support and JavaScript modules enabled. The initial load requires network access to fetch Three.js from jsDelivr unless the import map is changed to a local copy.
+This repo wires **Epic-Random-Maps** as the world-source layer. The transmutation model is shared:
+
+- **Artifact gathering**: Extract visual evidence
+- **Elemental generation**: Derive water/fire/earth/air pressures
+- **Grid organization**: Classify cells into 64×64 modal grid
+- **Provenance preservation**: Attach seed envelope to every generated world
+
+Epic-Random-Maps can be extended with deeper agents (AIAgentGatherer, MeshGeneratorAgent, ModalGridAgent) without breaking the rendering adapter.
+
+## Runtime Integration
+
+`src/integrations.js` provides optional adapter boundaries for external systems:
+
+- **BOA adapter** (`boa-bigapi-framework`): Game state workflow (view, input, model, packet, frame processing).
+- **HOLOCRON adapter** (`HOLOCRON-Abstraction-SDK`): Item filtering and abstract state management.
+
+Both are sandboxed and safe to fail. If unavailable, the game runs standalone.
+
+## Browser Requirements
+
+- WebGL 2 support
+- JavaScript ES modules enabled
+- Modern browser (Chrome, Firefox, Safari, Edge)
+- Network access to fetch Three.js from jsDelivr (unless import map is modified)
 
 ## Development
 
@@ -166,9 +201,14 @@ npm run build
 npm test
 ```
 
-The test command compiles TypeScript and runs the compiled Node test files. GitHub Actions executes the same commands as the repository's CI gates.
+Tests validate determinism and provenance contracts. GitHub Actions runs the same commands on every push and pull request.
 
 ## License
 
-GNU GENERAL PUBLIC LICENSE
-Version 3, 29 June 2007
+GNU GENERAL PUBLIC LICENSE v3.0
+
+## Related Work
+
+- **Epic-Random-Maps**: Source design for elemental transmutation and world generation.
+- **Prismatic Emergence**: Conceptual framework for artifact-driven content generation.
+- **Three.js**: Browser rendering adapter.
