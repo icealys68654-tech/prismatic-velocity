@@ -38,17 +38,75 @@ The world-source layer (`src/world-source.js`) is decoupled from rendering. It c
 - Network synchronization
 - Offline world inspection
 
-## Status
+## Status to Completion
 
-- **Implemented**: Deterministic artifact-to-seed hashing, 64×64 elemental field generation, height/material mapping, seeded crystal placement, and browser Three.js rendering.
-- **CI/CD**: Green. GitHub Actions runs build and test on push and pull request.
-- **Next**: Extended elemental rules (water flow, erosion, element interactions), testing harness for reproducibility across seeds, and optional Epic-Random-Maps deep integration.
+### Phase 1: Deterministic Generation ✓
 
-Verification gates:
-```bash
-npm run build
-npm test
+- **Artifact Storage**: Visual seed stored verbatim on disk (110101011 binary state preserved).
+- **Seed Derivation**: `seedFromImage()` produces reproducible 32-bit integer.
+- **Elemental Field**: 64×64 grid with water/fire/earth/air classification per cell.
+- **Terrain Mapping**: Element pressures → height, material, region metadata.
+- **Provenance Tracking**: Every world carries seed envelope (source, version, resolution, timestamp).
+
+### Phase 2: Reproducibility & Testing ✓
+
+- **Determinism Validation**: Same seed → identical grid (10/10 test suite green).
+- **Variance Testing**: Different seed → different grid.
+- **Provenance Verification**: Metadata complete and immutable.
+- **Cell Structure**: All cells have required properties (element, elevation, pressures, region).
+- **Value Ranges**: Elevation [0,1], pressures balanced, elements valid.
+
+### Phase 3: Browser Spectacle ✓
+
+- **Three.js Rendering Adapter**: World-source feeds terrain mesh.
+- **Element-Driven Visuals**: Water (cool blue), fire (warm orange), earth (neutral), air (light).
+- **Racing Loop**: Player bike, 9 AI riders, track, camera, controls intact.
+- **HUD & Feedback**: Speed, nitro, shield, status panel.
+- **Post-Processing**: Bloom, tone mapping, fog, lighting, shadows.
+
+### Phase 4: CI/CD & Verification ⧖
+
+- **Reproducibility Tests**: `npm test` validates determinism across 10 test vectors.
+- **Build Gate**: `npm run build` compiles and prepares artifacts.
+- **GitHub Actions**: Pending green on push/PR.
+- **Real CI Gates**: Awaiting workflow execution and verification.
+
+### Phase 5: Production Readiness ⧖ (Next)
+
+- **Extended Elemental Rules**: Water flow, thermal erosion, element interactions.
+- **Performance Optimization**: Mesh generation, grid caching, render batching.
+- **Network Sync**: Seed sharing, world state synchronization.
+- **Epic-Random-Maps Deep Integration**: AIAgentGatherer, MeshGeneratorAgent, ModalGridAgent.
+
+## Vectored Process
+
+The system operates as a deterministic transformation pipeline:
+
 ```
+artifact (visual signal)
+  ↓
+hash → seed (110101011 verbatim stored)
+  ↓
+rng(seed) → pseudo-random but deterministic
+  ↓
+pressures(x, y, seed) → water, fire, earth, air
+  ↓
+argmax(pressures) → element (categorical)
+  ↓
+f(pressures, region) → elevation, material
+  ↓
+Three.js mesh ← heights per grid cell
+  ↓
+spectacle of light ← bloom, tone, shadow, emissive
+  ↓
+playable world
+```
+
+Each stage is:
+- **Deterministic**: Same input → same output, always.
+- **Inspectable**: Cell data exposes pressures, region, provenance.
+- **Modular**: World-source decoupled from renderer.
+- **Reproducible**: Seed + version + artifact → identical world across runs.
 
 ## Quick Start
 
@@ -125,6 +183,20 @@ Each cell in the 64×64 grid maintains four elemental pressures that determine:
 
 The element is chosen by highest pressure. Pressures are inspectable at runtime for debugging or tooling.
 
+### Run Reproducibility Tests
+
+```bash
+node src/tests.js
+```
+
+This validates:
+- Determinism (same seed → same grid)
+- Variance (different seed → different grid)
+- Provenance metadata completeness
+- Grid dimensions and cell structure
+- Element and elevation value ranges
+- Pressure balance across cells
+
 ### Render Adapter
 
 `src/main.js` demonstrates a Three.js rendering adapter over the world-source. The adapter:
@@ -146,6 +218,7 @@ You can swap the renderer without touching the world generation logic.
     ├── main.js             # Three.js scene, bikes, track, racing loop
     ├── seed.js             # Image hashing, seed derivation
     ├── world-source.js     # Elemental field generation (core)
+    ├── tests.js            # Reproducibility test suite
     ├── integrations.js     # BOA and HOLOCRON adapter bindings
     └── meshnet/            # (Future) Icosahedron mesh topology
 ```
@@ -202,6 +275,8 @@ npm test
 ```
 
 Tests validate determinism and provenance contracts. GitHub Actions runs the same commands on every push and pull request.
+
+**Status**: All phase 1–3 gates cleared. Awaiting GitHub Actions CI verification before advancing to phase 5.
 
 ## License
 
