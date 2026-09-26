@@ -17,6 +17,7 @@ console.info("PROVENANCE", provenance, { coordinator, PRISMATIC_SEED_VERSION });
 const adapterState = {
   boa: "idle",
   holocron: "idle",
+  nexus: "idle",
   lastError: null,
   frameCount: 0,
 };
@@ -30,7 +31,7 @@ adapterEl.style.opacity = "0.9";
 statusEl.appendChild(adapterEl);
 
 function refreshAdapterStatus() {
-  adapterEl.textContent = `ADAPTERS: BOA ${adapterState.boa.toUpperCase()} • HOLOCRON ${adapterState.holocron.toUpperCase()}`;
+  adapterEl.textContent = `ADAPTERS: BOA ${adapterState.boa.toUpperCase()} • HOLOCRON ${adapterState.holocron.toUpperCase()} • NEXUS ${adapterState.nexus.toUpperCase()}`;
   if (adapterState.lastError) {
     adapterEl.title = adapterState.lastError;
   } else {
@@ -206,6 +207,23 @@ async function runAdapters(snapshot) {
     adapterState.holocron = "error";
     adapterState.lastError = error?.message || String(error);
     console.warn("HOLOCRON adapter failed", error);
+  }
+
+  try {
+    adapterState.nexus = "running";
+    refreshAdapterStatus();
+    await coordinator.executeNexusRealmPipeline({
+      region: "elemental-realm",
+      width: 12,
+      height: 12,
+      player: snapshot.player,
+    });
+    adapterState.nexus = "ok";
+    adapterState.lastError = null;
+  } catch (error) {
+    adapterState.nexus = "error";
+    adapterState.lastError = error?.message || String(error);
+    console.warn("NEXUS adapter failed", error);
   }
 
   refreshAdapterStatus();
