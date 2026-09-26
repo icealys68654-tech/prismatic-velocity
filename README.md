@@ -1,6 +1,6 @@
 # Prismatic Velocity — Extreme-G Inspired 3D Racing Simulation
 
-A browser-playable high-speed combat-racing prototype generated from the supplied **Prismatic Emergence** image.
+A browser-playable high-speed combat-racing prototype generated from the supplied Prismatic Emergence image.
 
 ## What is included
 
@@ -10,69 +10,58 @@ A browser-playable high-speed combat-racing prototype generated from the supplie
 - 64×64 / elemental-world concept is represented by the terrain + crystal field.
 - Nitro, steering, acceleration, weapons, shields, AI riders, camera chase and bloom.
 - PBR materials, ACES tone mapping, HDR-like bloom, fog, emissive geometry and dynamic lighting.
-- Three.js **r186**, the current release visible in the Three.js GitHub releases page at the time this project was generated.
+- Three.js r186.
 - Adapter boundaries for the requested `boa-bigapi-framework` and `HOLOCRON-Abstraction-SDK` repositories.
+- Active runtime wiring for both adapter boundaries through the main game loop, with fail-safe status telemetry.
 
-## Prismatic Neon Icosahedron Meshnet (New)
+## Prismatic Neon Icosahedron Meshnet
 
-The repository now includes a high-performance **Prismatic Neon Icosahedron Core** meshnet architecture powered by PIN (Popping Interning NPU).
+The repository includes a high-performance Prismatic Neon Icosahedron Core meshnet architecture powered by PIN (Popping Interning NPU).
 
 ### Architecture Overview
 
 Located in `src/meshnet/icosahedron-core.ts`, this module provides:
 
 #### Geometric Core
-- **20-sided Icosahedron Structure**: Golden ratio-proportioned vertices with 5.5-scale XYZ vectoring
-- **Tri-Axis Refraction**: Three orthogonal circles (X, Y, Z axes) for geometric transformation
-- **Isosceles Triangle Projection**: Refraction through tri-axis planes with plane-based projection
+- 20-sided Icosahedron Structure: Golden ratio-proportioned vertices with 5.5-scale XYZ vectoring
+- Tri-Axis Refraction: Three orthogonal circles (X, Y, Z axes) for geometric transformation
+- Isosceles Triangle Projection: Refraction through tri-axis planes with plane-based projection
 
 #### PIN (Popping Interning NPU) Architecture
 ```typescript
-// Preloading & Offsetting
 pinManager.preload(vertices)
-
-// Offloading & Memory Mapping
 pinManager.offload(key, data)
-
-// Sort, Pull, Filter, Poll Operations
 pinManager.sortPullFilterPoll(criteria)
-
-// Packet Handling (Read/Write)
 pinManager.handlePacket(packetData)
-
-// Updates & Upgrades
 pinManager.processUpdates()
 ```
 
 #### CPU/NPU Workflow Integration
-- **CPU Phase**: Sequential priority-based task execution
-- **NPU Phase**: Parallel geometric acceleration and transformation
-- **Workflow Engine**: Coordinates CPU and NPU processing with result merging
+- CPU Phase: Sequential priority-based task execution
+- NPU Phase: Parallel geometric acceleration and transformation
+- Workflow Engine: Coordinates CPU and NPU processing with result merging
 
 ### Key Features
+- Vectored Coordinates: All vertices offset by a 5.5 scale factor
+- Hybrid Caching: memory-mapped, polling, and hybrid caching strategies
+- Packet Serialization: binary packet format with checksum validation
+- Geometric Acceleration: NPU-based tri-axis refraction for real-time transformations
 
-- **Vectored Coordinates**: All vertices offset by 5.5 scale factor for high-precision spatial representation
-- **Hybrid Caching**: Memory-mapped, polling, and hybrid caching strategies
-- **Packet Serialization**: Binary packet format with checksum validation for I/O operations
-- **Geometric Acceleration**: NPU-based tri-axis refraction for real-time transformations
+## Runtime integration status
 
-### Usage
+This project now includes active adapter integration rather than a passive placeholder boundary.
 
-```typescript
-import { buildMeshnetCore } from './src/meshnet/icosahedron-core';
+- `src/integrations.js` defines the BOA and HOLOCRON bridge adapters.
+- `src/main.js` wires both adapters into the live frame loop.
+- The runtime calls are throttled and fail-safe so render performance remains stable even if the external repositories are not installed or their APIs are not yet mapped.
+- The HUD shows adapter health (`BOA`, `HOLOCRON`) in the status panel.
 
-// Build the complete meshnet
-const meshnet = buildMeshnetCore();
+### Adapter behavior
 
-// Access components
-const { vertices, faces, triAxisRefraction, workflow } = meshnet;
+The BOA adapter exposes a workflow-oriented bridge for game-state snapshots and prismatics-style compute payloads.
+The HOLOCRON adapter exposes a runtime/filter pipeline bridge for simulation metadata and runtime control.
 
-// Execute CPU/NPU workflow
-const result = await workflow.executeWorkflow(inputData);
-```
-
-### Design by
-**Jonathan R McKinney** — PIN Architecture Designer
+Both remain intentionally thin and stable so real imports can be substituted later without disturbing core gameplay logic.
 
 ## Run
 
@@ -87,29 +76,24 @@ Then open:
 `http://localhost:8080/`
 
 Controls:
-
-- `W/S` — accelerate / brake
-- `A/D` — steer
-- `Shift` — nitro
-- `Space` — fire plasma projectile
-- `R` — reset
+- W/S — accelerate / brake
+- A/D — steer
+- Shift — nitro
+- Space — fire plasma projectile
+- R — reset
 
 ## Repository integration
 
-The two requested GitHub repositories could not be fetched from the build environment, so the project does **not** fabricate their API surface. See:
+The project includes an explicit boundary for the requested GitHub repositories:
 
-`src/integrations.js`
+- `somsung46813-creator/boa-bigapi-framework`
+- `somsung46813-creator/HOLOCRON-Abstraction-SDK`
 
-After making the repositories available, replace the adapter method bodies with their real imports/exports. The game already exposes the integration boundary:
-
-```js
-const boa = new BoaBigApiAdapter();
-const holocron = new HolocronAbstractionAdapter();
-```
+The actual adapters currently operate as safe compatibility shims, and runtime wiring is intentionally resilient to missing or incomplete real imports. The architecture is ready to be replaced with direct library imports when those repository contracts are confirmed and available locally.
 
 ## Design
 
-The original Extreme-G series is characterized by very high-speed futuristic racing, looping/roller-coaster track layouts and weapon combat. This project uses those *gameplay concepts* while gener[...]
+The original Extreme-G series is characterized by very high-speed futuristic racing, looping/roller-coaster track layouts and weapon combat. This project uses those gameplay concepts while generating a deterministic, image-derived world.
 
 ## Seed / provenance
 
