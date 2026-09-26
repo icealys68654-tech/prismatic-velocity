@@ -170,4 +170,5 @@ The test command compiles TypeScript and runs the compiled Node test files. GitH
 
 ## License
 
-No license has been declared for this repository yet. Treat the code and assets as all rights reserved unless the repository owner specifies otherwise.
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
