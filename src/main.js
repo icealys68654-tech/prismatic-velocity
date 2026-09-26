@@ -3,13 +3,16 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { seedFromImage, PRISMATIC_SEED_VERSION } from "./seed.js";
-import { BoaBigApiAdapter, HolocronAbstractionAdapter } from "./integrations.js";
+import { IntegrationCoordinator } from "./integrations.js";
 
 const seed = await seedFromImage("./seed.png");
-const boa = new BoaBigApiAdapter();
-const holocron = new HolocronAbstractionAdapter();
+const coordinator = new IntegrationCoordinator({
+  runtime: "prismatic-velocity",
+  seed,
+  version: PRISMATIC_SEED_VERSION,
+});
 const provenance = { source_artifact:"seed.png", seed, algorithm_version:"1", grid_resolution:"64x64", generated_at:new Date().toISOString(), generator:"Transmutation World / Prismatic Velocity" };
-console.info("PROVENANCE", provenance, { boa, holocron, PRISMATIC_SEED_VERSION });
+console.info("PROVENANCE", provenance, { coordinator, PRISMATIC_SEED_VERSION });
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x02030a);
@@ -162,6 +165,48 @@ function animate(now){
   document.querySelector("#kmh").textContent=Math.round(speed*145000);
   document.querySelector("#boost").textContent=`NITRO ×${Math.max(0,Math.ceil(nitro))}`;
   document.querySelector("#shield").style.width=`${Math.max(0,shield)}%`;
+
+  const snapshot = {
+    player: {
+      position: player.position.clone(),
+      speed,
+      nitro,
+      shield,
+      lap,
+      lateral,
+      tParam,
+    },
+    ai: ai.map((b) => ({
+      position: b.mesh.position.clone(),
+      speed: b.speed,
+      offset: b.offset,
+      t: b.t,
+    })),
+    camera: camera.position.clone(),
+    input: { keys: { ...keys } },
+    deltaTime: dt,
+    timestamp: now,
+  };
+  coordinator.updateGameState(snapshot);
+  void coordinator.executeBoaWorkflow({
+    input: { keys: { ...keys } },
+    deltaTime: dt,
+  });
+  void coordinator.executeHolocronAbstraction({
+    items: [{ id: "race-state", ...snapshot }],
+    query: "prismatic-velocity",
+    bindings: {
+      B: 0,
+      A: 1,
+      Y: 2,
+      X: 3,
+      L: 4,
+      R: 5,
+      Select: 8,
+      Start: 9,
+    },
+  });
+
   composer.render();
 }
 animate(performance.now());
