@@ -43,7 +43,7 @@ export async function runReproducibilityTests() {
     const world = generateSourceWorld({ seed: 0xdeadbeef });
     const prov = world.provenance;
     const passed = prov.seed &&
-                   prov.algorithm_version === "1" &&
+                   prov.algorithm_version === "2" &&
                    prov.grid_resolution === "64x64" &&
                    prov.generator &&
                    prov.generated_at;
@@ -123,13 +123,13 @@ export async function runReproducibilityTests() {
   };
   tests.push(test7());
 
-  // Test 8: Pressures sum to reasonable value (roughly 1.0-1.5)
+  // Test 8: Normalized elemental pressures sum to 1.0
   const test8 = () => {
     const world = generateSourceWorld({ seed: 0xcccccccc });
     const pressureCheck = world.grid.every((row) =>
       row.every((cell) => {
         const sum = cell.pressures.water + cell.pressures.fire + cell.pressures.earth + cell.pressures.air;
-        return sum > 0.8 && sum < 2.0;
+        return Math.abs(sum - 1) < 1e-9;
       })
     );
 
