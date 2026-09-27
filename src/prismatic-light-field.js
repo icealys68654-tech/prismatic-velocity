@@ -63,3 +63,39 @@ export function reactPrismaticLightField(field, runtimeState, { radius = 900 } =
     }),
   };
 }
+
+
+export function flowPrismaticLightField(field, runtimeState, previousRuntimeState, { radius = 900 } = {}) {
+  if (!field?.points?.length) throw new TypeError("flowPrismaticLightField requires a light field");
+  const current = runtimeState?.position ?? { x: 0, y: 0, z: 0 };
+  const previous = previousRuntimeState?.position ?? current;
+  const dx = current.x - previous.x;
+  const dz = current.z - previous.z;
+  const magnitude = Math.hypot(dx, dz);
+  const direction = magnitude > 1e-9 ? { x: dx / magnitude, z: dz / magnitude } : { x: 0, z: 0 };
+  const safeRadius = Math.max(1, Number(radius) || 1);
+  const cellSize = 5000 / 63;
+
+  return {
+    ...reactPrismaticLightField(field, runtimeState, { radius: safeRadius }),
+    flow_direction: direction,
+    points: field.points.map((point) => {
+      const worldX = (point.x - 31.5) * cellSize;
+      const worldZ = (point.y - 31.5) * cellSize;
+      const toX = worldX - current.x;
+      const toZ = worldZ - current.z;
+      const distance = Math.hypot(toX, toZ);
+      const alignment = magnitude > 1e-9 && distance > 1e-9
+        ? (direction.x * toX + direction.z * toZ) / distance
+        : 0;
+      const flow = clamp((alignment + 1) * 0.5, 0, 1);
+      const proximity = clamp(1 - distance / safeRadius, 0, 1);
+      return {
+        ...point,
+        flow,
+        proximity,
+        intensity: clamp(point.intensity * (0.7 + flow * 0.45 + proximity * 0.35), 0, 1),
+      };
+    }),
+  };
+}
