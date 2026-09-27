@@ -3,6 +3,7 @@ import { buildWorldMesh } from "./world-mesh.js";
 import { runPhase8And9Tests } from "./tests-phase8-9.js";
 import { runPhase10Tests } from "./tests-phase10.js";
 import { runPhase10AdapterTests } from "./tests-phase10-adapters.js";
+import { runPhase11Tests } from "./tests-phase11.js";
 
 export async function runReproducibilityTests() {
   const tests = [];
@@ -222,6 +223,7 @@ export async function runReproducibilityTests() {
   await runPhase8And9Tests();
   await runPhase10Tests();
   await runPhase10AdapterTests();
+  await runPhase11Tests();
   return tests;
 }
 
