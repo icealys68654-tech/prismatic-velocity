@@ -22,11 +22,7 @@ export function prismaticLightFromCell(cell, phase = 0) {
   }
   const tension = Math.abs(p.fire - p.water) + Math.abs(p.earth - p.air);
   const intensity = clamp(0.55 + tension * 0.45 + Math.sin(phase + cell.x * 0.17 + cell.y * 0.11) * 0.08, 0, 1);
-  return {
-    color: rgb.map((value) => clamp(value, 0, 1)),
-    intensity,
-    phase: phase,
-  };
+  return { color: rgb.map((value) => clamp(value, 0, 1)), intensity, phase };
 }
 
 export function buildPrismaticLightField(world, { samples = 128, phase = 0 } = {}) {
@@ -41,18 +37,29 @@ export function buildPrismaticLightField(world, { samples = 128, phase = 0 } = {
     const x = index % width;
     const cell = world.grid[y][x];
     const light = prismaticLightFromCell(cell, phase);
-    points.push({
-      x: cell.x,
-      y: cell.y,
-      elevation: cell.elevation,
-      color: light.color,
-      intensity: light.intensity,
-    });
+    points.push({ x: cell.x, y: cell.y, elevation: cell.elevation, color: light.color, intensity: light.intensity });
   }
+  return { source_seed: world.provenance?.seed, algorithm_version: "2", phase, points };
+}
+
+export function reactPrismaticLightField(field, runtimeState, { radius = 900 } = {}) {
+  if (!field?.points?.length) throw new TypeError("reactPrismaticLightField requires a light field");
+  const position = runtimeState?.position ?? { x: 0, y: 0, z: 0 };
+  const safeRadius = Math.max(1, Number(radius) || 1);
   return {
-    source_seed: world.provenance?.seed,
-    algorithm_version: "1",
-    phase,
-    points,
+    ...field,
+    runtime_frame: Number(runtimeState?.frame ?? 0),
+    runtime_route_index: Number(runtimeState?.route_index ?? 0),
+    points: field.points.map((point) => {
+      const dx = point.x - position.x / (5000 / 63);
+      const dz = point.y - position.z / (5000 / 63);
+      const distance = Math.sqrt(dx * dx + dz * dz) * (5000 / 63);
+      const proximity = clamp(1 - distance / safeRadius, 0, 1);
+      return {
+        ...point,
+        intensity: clamp(point.intensity * (0.72 + proximity * 0.68), 0, 1),
+        proximity,
+      };
+    }),
   };
 }
