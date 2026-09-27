@@ -10,6 +10,9 @@ export function runGenrePrototypeTests() {
   const world = generateSourceWorld({ seed: 0x31415926, width: 64, height: 64 });
   const route = buildTraversalRoute(world);
   const catalog = getGenrePrototypeCatalog();
+  const isolated = createGenrePrototypeRuntime({ genre: "action", world, route });
+  isolated.start();
+  assert(isolated.getState().running === true, "generic genre runtime must run independently of racing runtime");
   const genres = Object.keys(catalog);
 
   assert(genres.length === 12, "genre prototype catalog must expose all 12 supported genres");
