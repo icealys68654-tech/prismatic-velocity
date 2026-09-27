@@ -3,6 +3,7 @@ import { buildWorldMesh } from "../world-mesh.js";
 import { buildTraversalRoute } from "../traversal.js";
 import { createBOA, createCPUWorkflow } from "./boa-api.js";
 import { createFilterPipeline, createHolocronRuntime } from "./holocron-api.js";
+import { createGenreGame, getGenreCatalog } from "./genres.js";
 
 /**
  * Phase 9 unified Prismatic Velocity API.
@@ -32,6 +33,24 @@ export function createPrismaticVelocityAPI(options = {}) {
 
     buildRoute(world, options = {}) {
       return buildTraversalRoute(world, options);
+    },
+
+    getGenreCatalog() {
+      return getGenreCatalog();
+    },
+
+    createGame({ genre = "action", world, routeOptions = {} } = {}) {
+      const sourceWorld = world ?? generateSourceWorld({});
+      const route = buildTraversalRoute(sourceWorld, routeOptions);
+      return createGenreGame({ genre, world: sourceWorld, route });
+    },
+
+    stepGame(game, input = {}) {
+      return game.step(input);
+    },
+
+    getGameState(game) {
+      return game.getState();
     },
 
     query(items, query = "") {
