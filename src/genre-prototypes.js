@@ -1,4 +1,4 @@
-import { createGameRuntime } from "./game-runtime.js";
+import { createGenrePrototypeRuntime } from "./genre-prototype-runtime.js";
 import { getGenreFrameworkCatalog } from "./api/genre-framework.js";
 
 const PROTOTYPE_DEFINITIONS = Object.freeze({
@@ -31,7 +31,7 @@ export function getGenrePrototypeCatalog() {
 
 export function createGenrePrototype({ genre, world, route } = {}) {
   assertGenre(genre);
-  const runtime = createGameRuntime({ genre, world, route });
+  const runtime = createGenrePrototypeRuntime({ genre, world, route });
   return {
     genre,
     definition: { genre, ...clone(PROTOTYPE_DEFINITIONS[genre]) },
