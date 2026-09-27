@@ -9,7 +9,7 @@ import { buildWorldMesh } from "./world-mesh.js";
 import { createGameRuntime } from "./game-runtime.js";
 import { createInputController } from "./input-controller.js";
 import { createRuntimeRenderer } from "./runtime-renderer.js";
-import { buildPrismaticLightField } from "./prismatic-light-field.js";
+import { buildPrismaticLightField, reactPrismaticLightField } from "./prismatic-light-field.js";
 
 const seed = await seedFromImage("./seed.png");
 const coordinator = new IntegrationCoordinator({
@@ -136,6 +136,7 @@ terrain();
 
 const prismaticLightField = buildPrismaticLightField(world, { samples: 128, phase: 0.25 });
 const lightPositions = new Float32Array(prismaticLightField.points.length * 3);
+const lightIntensity = new Float32Array(prismaticLightField.points.length);
 const lightColors = new Float32Array(prismaticLightField.points.length * 3);
 const lightCellSize = 5000 / 63;
 prismaticLightField.points.forEach((point, index) => {
@@ -146,6 +147,7 @@ prismaticLightField.points.forEach((point, index) => {
   lightColors[offset] = point.color[0];
   lightColors[offset + 1] = point.color[1];
   lightColors[offset + 2] = point.color[2];
+  lightIntensity[index] = point.intensity;
 });
 const lightGeometry = new THREE.BufferGeometry();
 lightGeometry.setAttribute("position", new THREE.BufferAttribute(lightPositions, 3));
@@ -268,6 +270,10 @@ function animate(now){
   speed = THREE.MathUtils.clamp(movementMagnitude * 0.0018 + (normalizedInput.boost ? 0.002 : 0), 0, 0.0069);
   if (normalizedInput.boost && nitro > 0) nitro = Math.max(0, nitro - 0.012 * dt);
   runtimeRenderer.render({ ...runtimeState, forward: { x: 0, y: 0, z: 1 } });
+  const reactiveLightField = reactPrismaticLightField(prismaticLightField, runtimeState);
+  reactiveLightField.points.forEach((point, index) => {
+    lightIntensity[index] = point.intensity;
+  });
   lightMaterial.opacity = 0.48 + Math.sin(runtimeState.frame * 0.045) * 0.12;
   const cp=track.getPointAt(tParam), cq=track.getPointAt((tParam+.004)%1);
   const forward=cq.clone().sub(cp).normalize();
