@@ -1,6 +1,7 @@
 import { generateSourceWorld } from "./world-source.js";
 import { buildTraversalRoute } from "./traversal.js";
 import { getGenrePrototypeCatalog, createGenrePrototype, prototypeInputForGenre } from "./genre-prototypes.js";
+import { createGenrePrototypeRuntime } from "./genre-prototype-runtime.js";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
