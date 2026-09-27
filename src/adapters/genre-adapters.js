@@ -1,4 +1,5 @@
 import { createGenreGame } from "../api/genres.js";
+import { getGenreFrameworkCatalog } from "../api/genre-framework.js";
 
 const FAMILY = Object.freeze({
   action: ["action", "platformer", "shooter", "action-rpg"],
@@ -8,10 +9,11 @@ const FAMILY = Object.freeze({
   puzzle: ["puzzle"],
 });
 
-function makeAdapter(id, genres) {
+function makeAdapter(id, genres, catalog) {
   return Object.freeze({
     id,
     genres: [...genres],
+    contracts: Object.fromEntries(genres.map((genre) => [genre, catalog[genre]])),
     supports(genre) { return genres.includes(genre); },
     bind({ world, route, genre } = {}) {
       const selected = genre ?? genres[0];
@@ -23,7 +25,8 @@ function makeAdapter(id, genres) {
 }
 
 export function createGenreAdapters() {
-  return Object.fromEntries(Object.entries(FAMILY).map(([id, genres]) => [id, makeAdapter(id, genres)]));
+  const catalog = getGenreFrameworkCatalog();
+  return Object.fromEntries(Object.entries(FAMILY).map(([id, genres]) => [id, makeAdapter(id, genres, catalog)]));
 }
 
 export function createGenreAdapter(genre) {
