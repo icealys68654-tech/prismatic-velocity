@@ -2,7 +2,7 @@
 
 Deterministic elemental world generation and a browser-playable 3D racing prototype.
 
-> **Status:** The genre API abstraction is implemented; GitHub Actions remains the authoritative CI gate for completion.
+> **Status:** Genre API abstraction and architecture boundaries are implemented and verified by GitHub Actions.
 
 **Genre Contract → BOA / HOLOCRON Projection → Game Session**  
 **Artifact → Seed → Elemental Pressure → Terrain → Runtime → Prismatic Light → 3D World**
@@ -49,40 +49,113 @@ The runtime owns gameplay state. Rendering projects that state into the scene. C
 
 ## Architecture
 
+## Architecture Boundaries
+
+The project is organized into three deliberately separate domains. The **genre framework is an API abstraction**, not a replacement for the project's deterministic world generator or its racing-specific renderer.
+
 ```text
-seed.png
-   │
-   ▼
-seedFromImage()
-   │
-   ▼
-generateSourceWorld()
-   │
-   ├── elemental pressures
-   ├── element classification
-   ├── elevation / material
-   └── provenance
-   │
-   ▼
-buildWorldMesh()
-   │
-   ▼
-buildTraversalRoute()
-   │
-   ▼
-createGameRuntime()
-   │
-   ├── input normalization
-   ├── deterministic frame state
-   └── route consumption
-   │
-   ▼
-reactPrismaticLightField()
-   │
-   ▼
-Three.js renderer
+                         PRISMATIC VELOCITY
+                                │
+             ┌──────────────────┼──────────────────┐
+             │                  │                  │
+             ▼                  ▼                  ▼
+     WORLD GENERATION     GENRE / GAME API   RACING / RENDERING
+             │                  │                  │
+     artifact → seed      genre contracts      terrain mesh
+     elemental pressure   game sessions        traversal route
+     64×64 modal grid     BOA / HOLOCRON       player runtime
+             │            projections           Three.js
+             │                  │                  │
+             └─────────── data/state ─────────────┘
 ```
 
+### 1. Deterministic elemental world generation
+
+This is the **world-source domain**. It transforms an artifact and seed into reproducible elemental data.
+
+Responsibilities include:
+- artifact / seed interpretation;
+- deterministic water, fire, earth, and air pressure;
+- 64×64 modal-grid generation;
+- element classification;
+- elevation and material data;
+- provenance and algorithm-version metadata.
+
+Primary modules:
+- `src/seed.js`
+- `src/world-source.js`
+
+The genre framework does **not** generate or own this world. A genre implementation may consume world data when the application chooses to bind the two systems.
+
+### 2. Browser-playable video-game genre framework
+
+This is the **game-domain abstraction**. It describes reusable contracts for the supported video-game genres without assuming that every game is a racing game or even that a generated elemental world exists.
+
+Primary abstraction:
+- `src/api/genre-framework.js`
+
+Supported contracts:
+- Action
+- Platformer
+- Shooter
+- RPG
+- MMORPG
+- Action RPG
+- Strategy
+- RTS
+- TBS
+- Adventure
+- Visual Novel
+- Puzzle
+
+The framework provides:
+- genre metadata and mechanics;
+- deterministic game sessions;
+- genre state transitions;
+- BOA projection;
+- HOLOCRON abstraction projection.
+
+The browser-playable application can then select a concrete genre implementation. `src/api/genres.js` remains the project's current concrete gameplay implementation, while `genre-framework.js` defines the reusable contract boundary.
+
+### 3. Racing-specific terrain, traversal, and renderer
+
+The racing prototype is a **specialized consumer** of the other domains. Its terrain, traversal, player controls, runtime, and Three.js projection are not part of the generic genre framework.
+
+Primary modules include:
+- `src/world-mesh.js` — terrain mesh construction;
+- `src/traversal.js` — deterministic route construction;
+- `src/game-runtime.js` — runtime state boundary;
+- `src/player-controller.js` — player motion;
+- `src/input-controller.js` — browser input;
+- `src/runtime-renderer.js` — runtime-to-render projection;
+- `src/prismatic-light-field.js` — prismatic visual field;
+- `src/main.js` — browser / Three.js application.
+
+The racing prototype may use the genre contracts, but the generic genre framework must remain usable without importing racing terrain, traversal, or renderer code.
+
+### Dependency direction
+
+```text
+GENRE FRAMEWORK
+     │
+     ├── BOA contract projection
+     └── HOLOCRON contract projection
+
+WORLD GENERATOR ────────► optional game/world data
+
+RACING PROTOTYPE
+     ├── world generator output
+     ├── genre/game runtime
+     ├── terrain + traversal
+     └── Three.js renderer
+
+Constraint:
+genre-framework.js → must not depend on racing renderer
+genre-framework.js → must not generate elemental worlds
+racing renderer    → consumes runtime state; does not own game rules
+```
+
+This separation keeps the reusable game-genre API portable while preserving the project's specialized deterministic elemental-world and racing systems.
 ## Core Contracts
 
 ### Determinism
@@ -184,9 +257,9 @@ BLOOM / SPECTACLE
 
 The light field is visual state; gameplay authority remains in the runtime.
 
-### Genre abstraction gate
+### Architecture verification
 
-The next verification gate is the repository CI run for the genre framework changes. Completion requires `npm install`, `npm test`, and `npm run build` to pass on the resulting commit.
+The genre abstraction and the shared genre-contract refactor have passed the repository CI gates. The architecture remains intentionally separated into world generation, generic genre/game API, and racing-specific terrain/traversal/rendering.
 
 ## Framework Boundaries
 
@@ -213,7 +286,7 @@ The application does not claim that the Python BOA runtime or a separate HOLOCRO
 
 ### Current verification
 
-The preceding verified gate was Phase 11.4. Phase 11.5 also has successful GitHub Actions runs in the repository history. The new genre-framework changes are **pending their own CI verification** and are not marked complete until the current commit passes the same gates.
+Latest genre-framework changes are verified by GitHub Actions with the same repository gates:
 
 ```text
 npm install
@@ -221,7 +294,7 @@ npm test
 npm run build
 ```
 
-The README deliberately separates implemented code from verified completion.
+The README distinguishes implemented architecture from CI-verified completion.
 ## Project Structure
 
 ```text
