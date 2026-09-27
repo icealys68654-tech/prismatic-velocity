@@ -6,6 +6,9 @@ import { seedFromImage, PRISMATIC_SEED_VERSION } from "./seed.js";
 import { IntegrationCoordinator } from "./integrations.js";
 import { generateSourceWorld, elementColor } from "./world-source.js";
 import { buildWorldMesh } from "./world-mesh.js";
+import { createGameRuntime } from "./game-runtime.js";
+import { createInputController } from "./input-controller.js";
+import { createRuntimeRenderer } from "./runtime-renderer.js";
 
 const seed = await seedFromImage("./seed.png");
 const coordinator = new IntegrationCoordinator({
@@ -15,6 +18,7 @@ const coordinator = new IntegrationCoordinator({
 });
 const world = generateSourceWorld({ artifact: "seed.png", seed, width: 64, height: 64 });
 const provenance = world.provenance;
+const gameRuntime = createGameRuntime({ genre: "action", world });
 console.info("PROVENANCE", provenance, { coordinator, PRISMATIC_SEED_VERSION });
 
 const adapterState = {
@@ -161,11 +165,8 @@ let tParam=.02, lateral=0, speed=0, nitro=3, shield=100, lap=1;
 const ai=[];
 for(let i=0;i<9;i++){ const b=bike(palette[i%palette.length]); scene.add(b); ai.push({mesh:b,t:(.02+i*.011)%1,speed: .0017+rng()*.0011,offset:(rng()-.5)*5}); }
 
-const keys={};
-addEventListener("keydown",e=>{keys[e.code]=true;if(e.code==="KeyR")reset();});
-addEventListener("keyup",e=>keys[e.code]=false);
-function reset(){tParam=.02;lateral=0;speed=0;nitro=3;shield=100;lap=1;}
-
+const inputController = createInputController(window);
+const runtimeRenderer = createRuntimeRenderer({ object: player, camera });
 const projectiles=[];
 addEventListener("keydown",e=>{
   if(e.code==="Space" && !e.repeat){
@@ -232,14 +233,12 @@ let prev=performance.now();
 function animate(now){
   requestAnimationFrame(animate);
   const dt=Math.min((now-prev)/16.67,2); prev=now;
-  const accel=(keys.KeyW?0.000055:0)-(keys.KeyS?0.000035:0);
-  speed += accel*dt; speed*=Math.pow(.996,dt);
-  if(keys.ShiftLeft && nitro>0 && speed>.001){ speed+=.00016*dt; nitro-=.003*dt; }
-  speed=THREE.MathUtils.clamp(speed,0,.0069);
-  lateral += ((keys.KeyD?1:0)-(keys.KeyA?1:0))*.09*dt;
-  lateral*=Math.pow(.82,dt); lateral=THREE.MathUtils.clamp(lateral,-6,6);
-  tParam=(tParam+speed*dt)%1;
-  updateBike(player,tParam,lateral);
+  const normalizedInput = inputController.read();
+  const runtimeState = gameRuntime.step(normalizedInput);
+  const movementMagnitude = Math.abs(normalizedInput.move) + Math.abs(normalizedInput.direction);
+  speed = THREE.MathUtils.clamp(movementMagnitude * 0.0018 + (normalizedInput.boost ? 0.002 : 0), 0, 0.0069);
+  if (normalizedInput.boost && nitro > 0) nitro = Math.max(0, nitro - 0.012 * dt);
+  runtimeRenderer.render({ ...runtimeState, forward: { x: 0, y: 0, z: 1 } });
   const cp=track.getPointAt(tParam), cq=track.getPointAt((tParam+.004)%1);
   const forward=cq.clone().sub(cp).normalize();
   camera.position.lerp(player.position.clone().add(forward.clone().multiplyScalar(-15)).add(new THREE.Vector3(0,6,0)),.09);
@@ -253,14 +252,15 @@ function animate(now){
   document.querySelector("#shield").style.width=`${Math.max(0,shield)}%`;
 
   const snapshot = {
+    runtime: runtimeState,
     player: {
       position: player.position.clone(),
       speed,
       nitro,
       shield,
       lap,
-      lateral,
-      tParam,
+      lateral: normalizedInput.direction,
+      tParam: runtimeState.route_index,
     },
     ai: ai.map((b) => ({
       position: b.mesh.position.clone(),
@@ -269,7 +269,7 @@ function animate(now){
       t: b.t,
     })),
     camera: camera.position.clone(),
-    input: { keys: { ...keys } },
+    input: normalizedInput,
     deltaTime: dt,
     timestamp: now,
   };
@@ -282,6 +282,7 @@ function animate(now){
   composer.render();
 }
 refreshAdapterStatus();
+gameRuntime.start();
 animate(performance.now());
 
 addEventListener("resize",()=>{
