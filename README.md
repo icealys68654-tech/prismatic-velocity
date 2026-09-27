@@ -1,6 +1,6 @@
 # Prismatic Velocity
 
-Deterministic elemental world generation and a browser-playable 3D racing prototype.
+Deterministic elemental world generation and a browser-playable 3D pc video-game prototype.
 
 > **Status:** Genre API abstraction and architecture boundaries are implemented and verified by GitHub Actions.
 
