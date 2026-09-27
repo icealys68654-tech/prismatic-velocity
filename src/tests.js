@@ -1,4 +1,5 @@
 import { generateSourceWorld, elementColor, terrainHeightFromCell } from "./world-source.js";
+import { buildWorldMesh } from "./world-mesh.js";
 
 export async function runReproducibilityTests() {
   const tests = [];
@@ -168,6 +169,31 @@ export async function runReproducibilityTests() {
     };
   };
   tests.push(test10());
+
+
+  // Test 11: Phase 6 mesh is deterministic and topologically complete
+  const test11 = () => {
+    const world = generateSourceWorld({ seed: 0x2468ace0, width: 64, height: 64 });
+    const mesh1 = buildWorldMesh(world);
+    const mesh2 = buildWorldMesh(world);
+    const expectedVertices = 64 * 64;
+    const expectedTriangles = (64 - 1) * (64 - 1) * 2;
+    const passed = mesh1.vertex_count === expectedVertices &&
+                   mesh1.triangle_count === expectedTriangles &&
+                   mesh1.vertices.length === expectedVertices * 3 &&
+                   mesh1.colors.length === expectedVertices * 3 &&
+                   mesh1.indices.length === expectedTriangles * 3 &&
+                   JSON.stringify(mesh1) === JSON.stringify(mesh2);
+
+    return {
+      name: "Phase 6 mesh is deterministic and complete",
+      passed,
+      message: passed
+        ? `✓ Mesh: ${mesh1.vertex_count} vertices / ${mesh1.triangle_count} triangles`
+        : "✗ Mesh topology or determinism mismatch",
+    };
+  };
+  tests.push(test11());
 
   return tests;
 }
