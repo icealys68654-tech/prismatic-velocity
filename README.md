@@ -71,7 +71,7 @@ The world-source layer (`src/world-source.js`) is decoupled from rendering. It c
 - **Runtime Checks**: The deterministic runtime test suite is green.
 - **Canonical CI Gate**: GitHub Actions executes the repository's real gates on push and pull request.
 - **Gate parity**: The authoritative workflow runs `npm install`, `npm test`, and `npm run build`.
-- **Current verification**: CI run #52 completed successfully for commit `e8b74a4edb33bddddf50d2cc5f96d6810c1ad5e8`.
+- **Current verification**: CI run #60 completed successfully for commit `c66c3366a86709bb42b65f8c5cb1d9c86b1ecdc9`.
 - **Simulation rule**: `++1` / `1++` means advance only after the runtime gate is green; the next validation must mirror the same test and build commands rather than inventing a separate gate.
 
 ### Phase 5: Elemental Pressure Production Readiness ✓
@@ -348,7 +348,7 @@ npm test
 
 Tests validate determinism and provenance contracts. GitHub Actions runs the same commands on every push and pull request.
 
-**Status**: Phases 1–11.4 are implemented in the application architecture. The deterministic runtime, framework/genre adapters, and prismatic light field are covered by the reproducibility suite. GitHub Actions remains the authoritative CI validation path and currently reports a green run #56 for commit `cd11e8d475f9c973dde86b3d44424660987c319c`.
+**Status**: Phases 1–11.5 are implemented in the application architecture. The deterministic runtime, framework/genre adapters, and prismatic light field are covered by the reproducibility suite. GitHub Actions remains the authoritative CI validation path and currently reports a green run #60 for commit `c66c3366a86709bb42b65f8c5cb1d9c86b1ecdc9`.
 
 ## License
 
@@ -360,6 +360,14 @@ GNU GENERAL PUBLIC LICENSE v3.0
 - **Prismatic Emergence**: Conceptual framework for artifact-driven content generation.
 - **Three.js**: Browser rendering adapter.
 
+
+### Phase 11.5: Vectorized Light Flow ✓
+
+- Runtime movement between consecutive state snapshots defines a normalized light-flow direction.
+- Directional alignment and player proximity modulate each sampled light point deterministically.
+- The renderer applies computed intensity to the live Three.js vertex-color buffer; visual response is no longer stored in a detached array.
+- Phase 11.5 tests verify deterministic flow direction and bounded flow/intensity values.
+- GitHub Actions runs #58, #59, and #60 verified the real `npm install`, `npm test`, and `npm run build` gates successfully.
 
 ### Phase 11.4: Runtime-Reactive Prismatic Light ✓
 
