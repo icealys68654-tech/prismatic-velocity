@@ -9,6 +9,7 @@ import { buildWorldMesh } from "./world-mesh.js";
 import { createGameRuntime } from "./game-runtime.js";
 import { createInputController } from "./input-controller.js";
 import { createRuntimeRenderer } from "./runtime-renderer.js";
+import { buildPrismaticLightField } from "./prismatic-light-field.js";
 
 const seed = await seedFromImage("./seed.png");
 const coordinator = new IntegrationCoordinator({
@@ -133,6 +134,34 @@ function terrain(){
 }
 terrain();
 
+const prismaticLightField = buildPrismaticLightField(world, { samples: 128, phase: 0.25 });
+const lightPositions = new Float32Array(prismaticLightField.points.length * 3);
+const lightColors = new Float32Array(prismaticLightField.points.length * 3);
+const lightCellSize = 5000 / 63;
+prismaticLightField.points.forEach((point, index) => {
+  const offset = index * 3;
+  lightPositions[offset] = (point.x - 31.5) * lightCellSize;
+  lightPositions[offset + 1] = 18 + point.elevation * 120;
+  lightPositions[offset + 2] = (point.y - 31.5) * lightCellSize;
+  lightColors[offset] = point.color[0];
+  lightColors[offset + 1] = point.color[1];
+  lightColors[offset + 2] = point.color[2];
+});
+const lightGeometry = new THREE.BufferGeometry();
+lightGeometry.setAttribute("position", new THREE.BufferAttribute(lightPositions, 3));
+lightGeometry.setAttribute("color", new THREE.BufferAttribute(lightColors, 3));
+const lightMaterial = new THREE.PointsMaterial({
+  size: 18,
+  sizeAttenuation: true,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.58,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+const lightFieldPoints = new THREE.Points(lightGeometry, lightMaterial);
+scene.add(lightFieldPoints);
+
 function crystal(x,y,z,s,c){
   const g=new THREE.OctahedronGeometry(s,1);
   const m=new THREE.MeshPhysicalMaterial({color:c,emissive:c,emissiveIntensity:2.2,metalness:.1,roughness:.15,transmission:.25,transparent:true,opacity:.92});
@@ -185,7 +214,7 @@ function updateBike(obj,t,offset){
 }
 
 async function runAdapters(snapshot) {
-  const input = { keys: { ...keys } };
+  const input = { keys: { ...snapshot.input } };
   try {
     adapterState.boa = "running";
     refreshAdapterStatus();
@@ -239,6 +268,7 @@ function animate(now){
   speed = THREE.MathUtils.clamp(movementMagnitude * 0.0018 + (normalizedInput.boost ? 0.002 : 0), 0, 0.0069);
   if (normalizedInput.boost && nitro > 0) nitro = Math.max(0, nitro - 0.012 * dt);
   runtimeRenderer.render({ ...runtimeState, forward: { x: 0, y: 0, z: 1 } });
+  lightMaterial.opacity = 0.48 + Math.sin(runtimeState.frame * 0.045) * 0.12;
   const cp=track.getPointAt(tParam), cq=track.getPointAt((tParam+.004)%1);
   const forward=cq.clone().sub(cp).normalize();
   camera.position.lerp(player.position.clone().add(forward.clone().multiplyScalar(-15)).add(new THREE.Vector3(0,6,0)),.09);
