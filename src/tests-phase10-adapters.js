@@ -5,7 +5,14 @@ export async function runPhase10AdapterTests() {
     if (!condition) throw new Error(message);
   };
 
-  const api = createPrismaticVelocityAPI();
+  const core = {
+    frames: 0,
+    runFrame() { this.frames += 1; },
+    getFramebuffer() { return { width: 1, height: 1, data: new Uint8Array([255, 0, 0, 255]) }; },
+  };
+  const video = { connect() {}, disconnect() {} };
+  const input = { connect() {}, disconnect() {} };
+  const api = createPrismaticVelocityAPI({ core, video, input });
   const world = api.generateWorld({ seed: 0x10203040, width: 24, height: 24 });
   const route = api.buildRoute(world, { startY: 3, endY: 20 });
 
@@ -17,13 +24,6 @@ export async function runPhase10AdapterTests() {
     api.stepGame(game, { move: 1 });
   }
 
-  const core = {
-    frames: 0,
-    runFrame() { this.frames += 1; },
-    getFramebuffer() { return { width: 1, height: 1, data: new Uint8Array([255, 0, 0, 255]) }; },
-  };
-  const video = { connect() {}, disconnect() {} };
-  const input = { connect() {}, disconnect() {} };
   const adapter = api.holocronAdapter;
   assert(adapter.connect(null, null).status === "runtime-started", "HOLOCRON adapter did not start");
   assert(adapter.state === "running", "HOLOCRON adapter state mismatch");
