@@ -5,7 +5,7 @@ import { runPhase10Tests } from "./tests-phase10.js";
 import { runPhase10AdapterTests } from "./tests-phase10-adapters.js";
 import { runPhase11Tests } from "./tests-phase11.js";
 import { runPhase11_2Tests } from "./tests-phase11-2.js";
-import { buildPrismaticLightField } from "./prismatic-light-field.js";
+import { buildPrismaticLightField, reactPrismaticLightField } from "./prismatic-light-field.js";
 
 export async function runReproducibilityTests() {
   const tests = [];
@@ -242,6 +242,16 @@ export async function runReproducibilityTests() {
     name: "Phase 11.3 prismatic light field is deterministic and bounded",
     passed: lightPassed,
     message: lightPassed ? "✓ Light field verified" : "✗ Light field mismatch or out of bounds",
+  });
+  const reactiveA = reactPrismaticLightField(lightA, { frame: 8, route_index: 4, position: { x: 0, y: 0, z: 0 } });
+  const reactiveB = reactPrismaticLightField(lightA, { frame: 8, route_index: 4, position: { x: 0, y: 0, z: 0 } });
+  const reactivePassed = JSON.stringify(reactiveA) === JSON.stringify(reactiveB) &&
+    reactiveA.runtime_frame === 8 && reactiveA.runtime_route_index === 4 &&
+    reactiveA.points.every((point) => point.intensity >= 0 && point.intensity <= 1 && point.proximity >= 0 && point.proximity <= 1);
+  tests.push({
+    name: "Phase 11.4 light field reacts deterministically to runtime state",
+    passed: reactivePassed,
+    message: reactivePassed ? "✓ Runtime reactivity verified" : "✗ Runtime reactivity mismatch",
   });
   return tests;
 }
