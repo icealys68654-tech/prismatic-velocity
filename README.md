@@ -443,3 +443,12 @@ No phase is marked complete merely because code exists. Completion requires the 
 ## License
 
 GNU General Public License v3.0.
+
+
+## Phase 14 — Genre-Specific Mechanics
+
+Phase 14 is implemented and verified by GitHub Actions. The 12 browser prototypes now execute distinct deterministic mechanics inside `src/genre-prototype-runtime.js` rather than delegating gameplay state transitions to the racing game implementation.
+
+The runtime separates action, platformer, shooter, RPG, MMORPG, action-RPG, strategy, RTS, TBS, adventure, visual-novel, and puzzle state transitions while continuing to consume the deterministic elemental world as a shared substrate.
+
+**Status:** Phase 14 genre-specific mechanics are implemented and the real CI reproducibility/build gates are green.
