@@ -1,4 +1,5 @@
 import { createGenreGame } from "./api/genres.js";
+// Racing-specific runtime boundary. Generic genre prototypes use genre-prototype-runtime.js.
 import { buildTraversalRoute } from "./traversal.js";
 
 function routePosition(cell, cellSize = 5000 / 63) {
