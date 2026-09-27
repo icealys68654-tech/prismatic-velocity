@@ -32,6 +32,14 @@ export function runGenrePrototypeTests() {
     return { genre, objective: catalog[genre].objective, geometry: catalog[genre].geometry };
   });
 
+  const signatures = genres.map((genre) => {
+    const prototype = createGenrePrototype({ genre, world, route });
+    prototype.start();
+    return [genre, JSON.stringify(prototype.step(prototypeInputForGenre(genre, { move: 1, forward: 1, attack: true, action: true })))] ;
+  });
+  const distinctSignatures = new Set(signatures.map(([, state]) => state));
+  assert(distinctSignatures.size >= 8, "genre prototypes must expose materially distinct mechanics");
+
   const repeatedA = createGenrePrototype({ genre: "strategy", world, route });
   const repeatedB = createGenrePrototype({ genre: "strategy", world, route });
   repeatedA.start();
