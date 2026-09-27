@@ -18,7 +18,7 @@ This prototype implements the **Prismatic Emergence** transmutation model:
 4. **Terrain Generation**: Element pressures map to height, moisture, temperature, and material properties.
 5. **Provenance**: Every generated world retains source artifact, seed, algorithm version, and grid resolution for reproducibility and inspection.
 
-The racing game is a **rendering adapter** over this deterministic source model—not the primary system.
+The racing game is a **rendering adapter** over this deterministic source model—not the primary system. Phases 8–9 add traversal and a unified Prismatic Velocity API so gameplay, rendering, and framework contracts share one application boundary.
 
 ## Architecture
 
@@ -73,13 +73,51 @@ The world-source layer (`src/world-source.js`) is decoupled from rendering. It c
 - **Simulation Gate**: `++1 or 1++` next best step confirms the project is ready to simulate the canonical CI path.
 - **Status to Completion**: The repository is in a green state for gate simulation and can advance to full CI execution.
 
-### Phase 5: Production Readiness ⧖ (Next)
+### Phase 5: Elemental Pressure Production Readiness ✓
 
-- **Extended Elemental Rules**: Water flow, thermal erosion, element interactions.
-- **Performance Optimization**: Mesh generation, grid caching, render batching.
-- **Network Sync**: Seed sharing, world state synchronization.
-- **Epic-Random-Maps Deep Integration**: AIAgentGatherer, MeshGeneratorAgent, ModalGridAgent.
+- Pressure normalization: Water/fire/earth/air pressures form a normalized mixture per cell.
+- Deterministic balance: Pressure totals are validated to sum to 1.0.
+- Epic-Random-Maps alignment: The elemental field remains the source abstraction.
 
+### Phase 6: Renderer-Neutral Mesh ✓
+
+- Indexed geometry: 64×64 elemental cells become 4,096 vertices and 7,938 triangles.
+- Renderer separation: Mesh data is independent of Three.js.
+- Determinism: Identical source worlds produce identical mesh data.
+
+### Phase 7: Spatial Continuity ✓
+
+- Neighbor-aware elevation: Each mesh height blends its elemental height with its local 8-neighbor field.
+- Transition metadata: Elemental boundary transitions are counted for inspection.
+- Continuity validation: Finite, bounded, deterministic mesh output is tested.
+
+### Phase 8: Traversal + API Refactoring ✓
+
+The linked framework repositories are abstracted into Prismatic Velocity's own application API while preserving their documented public contracts.
+
+- BOA abstraction: BOAContext, CPUWorkflow, BOA, and Prismatics contracts are projected into browser-safe JavaScript.
+- HOLOCRON abstraction: FilterPipeline and HolocronRuntime contracts are projected into the application boundary.
+- Traversal layer: A deterministic left-to-right route is generated directly from the elemental world, respecting terrain height and elemental cost.
+- Endpoint contract: Routes explicitly honor deterministic start/end rows.
+- No guessed external calls: The application does not pretend the Python BOA runtime or HOLOCRON emulator implementation is directly executable in the browser.
+
+### Phase 9: Unified Prismatic Velocity API ✓
+
+src/api/prismatic-velocity.js becomes the application-facing orchestration boundary.
+
+- generateWorld() → deterministic elemental source.
+- buildMesh() → renderer-neutral terrain geometry.
+- buildRoute() → deterministic traversal data.
+- execute() → BOA-compatible workflow boundary.
+- query() / addFilter() → HOLOCRON-compatible filter boundary.
+- runtime.start() / runtime.stop() → HOLOCRON-compatible runtime boundary.
+- src/integrations.js is refactored to consume these local contracts instead of maintaining simulated copies of BOA/HOLOCRON internals.
+- Phase 8–9 contract tests verify traversal determinism, API identity preservation, filter ordering, runtime state, mesh generation, and unified API composition.
+
+Referenced framework contracts:
+
+- BOA BIG O API Framework: https://github.com/somsung46813-creator/boa-bigapi-framework
+- HOLOCRON Abstraction SDK: https://github.com/somsung46813-creator/HOLOCRON-Abstraction-SDK
 ## Vectored Process
 
 The system operates as a deterministic transformation pipeline:
@@ -157,7 +195,7 @@ console.log(world.provenance);
 // {
 //   source_artifact: "seed.png",
 //   seed: 305419896,
-//   algorithm_version: "1",
+//   algorithm_version: "3",
 //   grid_resolution: "64x64",
 //   generated_at: "2026-09-26T12:07:54.000Z",
 //   generator: "Epic-Random-Maps / Prismatic Velocity"
@@ -221,8 +259,8 @@ You can swap the renderer without touching the world generation logic.
     ├── seed.js             # Image hashing, seed derivation
     ├── world-source.js     # Elemental field generation (core)
     ├── tests.js            # Reproducibility test suite
-    ├── integrations.js     # BOA and HOLOCRON adapter bindings
-    └── meshnet/            # (Future) Icosahedron mesh topology
+    ├── api/                # Prismatic Velocity API projections of BOA/HOLOCRON contracts\n    │   ├── boa-api.js\n    │   ├── holocron-api.js\n    │   └── prismatic-velocity.js\n    ├── traversal.js        # Deterministic terrain traversal route\n    ├── integrations.js     # Compatibility facade over local API contracts
+    ├── tests-phase8-9.js   # Traversal/API contract validation\n    └── meshnet/            # (Future) Icosahedron mesh topology
 ```
 
 ## Determinism Contract
@@ -278,7 +316,7 @@ npm test
 
 Tests validate determinism and provenance contracts. GitHub Actions runs the same commands on every push and pull request.
 
-**Status**: All phase 1–3 gates cleared. GitHub Actions has been delegated to the real CI sequence once runtime checks remain green.
+**Status**: Phases 1–9 are implemented in the application architecture. Phase 8–9 API contracts are covered by the reproducibility test suite; GitHub Actions remains the authoritative CI validation path.
 
 ## License
 
