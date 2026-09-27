@@ -1,5 +1,6 @@
 import { generateSourceWorld, elementColor, terrainHeightFromCell } from "./world-source.js";
 import { buildWorldMesh } from "./world-mesh.js";
+import { runPhase8And9Tests } from "./tests-phase8-9.js";
 
 export async function runReproducibilityTests() {
   const tests = [];
@@ -216,6 +217,7 @@ export async function runReproducibilityTests() {
   };
   tests.push(test12());
 
+  await runPhase8And9Tests();
   return tests;
 }
 
