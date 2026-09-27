@@ -42,12 +42,19 @@ export function generateSourceWorld({ artifact = "seed.png", seed = 0x50524953, 
       const ridges = Math.sin((y * 0.26) + seed * 0.0004 + 2.1) * 0.5 + 0.5;
       const contour = Math.sin((x * 0.17) + (y * 0.11) + seed * 0.0002) * 0.5 + 0.5;
 
-      const pressures = {
+      const rawPressures = {
         water: 0.26 + (1 - ny) * 0.42 + (1 - basin) * 0.24 + rng() * 0.18,
         fire: 0.22 + (1 - contour) * 0.28 + (1 - ridges) * 0.22 + rng() * 0.20,
         earth: 0.28 + basin * 0.46 + ridges * 0.40 + rng() * 0.12,
         air: 0.18 + (nx * 0.42 + ny * 0.28) + contour * 0.34 + rng() * 0.14,
       };
+
+      // Keep pressure values comparable across cells while preserving their
+      // relative strength. This makes the elemental field a true mixture.
+      const pressureTotal = Object.values(rawPressures).reduce((sum, value) => sum + value, 0);
+      const pressures = Object.fromEntries(
+        Object.entries(rawPressures).map(([name, value]) => [name, value / pressureTotal]),
+      );
 
       const element = pickElement(pressures);
       const elevation = clamp(
@@ -80,7 +87,7 @@ export function generateSourceWorld({ artifact = "seed.png", seed = 0x50524953, 
     provenance: {
       source_artifact: artifact,
       seed,
-      algorithm_version: "1",
+      algorithm_version: "2",
       grid_resolution: `${width}x${height}`,
       generated_at: new Date().toISOString(),
       generator: "Epic-Random-Maps / Prismatic Velocity",
