@@ -25,5 +25,62 @@ jobs:
       - name: Run reproducibility tests
         run: npm test
 
+      - name: Validate parameterized modal-world abstraction
+        run: |
+          node --input-type=module <<'NODE'
+          import { generateSourceWorld } from "./src/world-source.js";
+
+          const cases = [
+            { seed: 0x12345678, width: 7, height: 11 },
+            { seed: 0x12345678, width: 23, height: 9 },
+            { seed: 0xabcdef01, width: 17, height: 31 }
+          ];
+
+          for (const dimensions of cases) {
+            const a = generateSourceWorld(dimensions);
+            const b = generateSourceWorld(dimensions);
+
+            if (a.width !== dimensions.width || a.height !== dimensions.height) {
+              throw new Error(`Dimension propagation failed for ${dimensions.width}x${dimensions.height}`);
+            }
+
+            if (a.grid.length !== dimensions.height ||
+                a.grid.some((row) => row.length !== dimensions.width)) {
+              throw new Error(`Modal grid shape failed for ${dimensions.width}x${dimensions.height}`);
+            }
+
+            if (a.heightfield.length !== dimensions.height ||
+                a.heightfield.some((row) => row.length !== dimensions.width)) {
+              throw new Error(`Heightfield shape failed for ${dimensions.width}x${dimensions.height}`);
+            }
+
+            if (JSON.stringify(a.grid) !== JSON.stringify(b.grid)) {
+              throw new Error(`Determinism failed for ${dimensions.width}x${dimensions.height}`);
+            }
+
+            if (a.provenance.grid_resolution !== `${dimensions.width}x${dimensions.height}`) {
+              throw new Error(`Provenance resolution failed for ${dimensions.width}x${dimensions.height}`);
+            }
+          }
+
+          const sameSeedDifferentDimensionsA = generateSourceWorld({
+            seed: 0x51524953,
+            width: 7,
+            height: 11
+          });
+          const sameSeedDifferentDimensionsB = generateSourceWorld({
+            seed: 0x51524953,
+            width: 11,
+            height: 7
+          });
+
+          if (JSON.stringify(sameSeedDifferentDimensionsA.grid) ===
+              JSON.stringify(sameSeedDifferentDimensionsB.grid)) {
+            throw new Error("Spatial dimensions do not affect generated modal worlds");
+          }
+
+          console.log("Parameterized modal-world abstraction: PASS");
+          NODE
+
       - name: Run build gate
         run: npm run build
