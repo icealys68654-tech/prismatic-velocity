@@ -8,7 +8,7 @@ PRISMATIC EMERGENCE treats an artifact or visual signal as an input to a determi
 
 **Gather · Generate · Organize**
 
-The architecture is designed to remain useful across applications. A racing prototype is one specialized consumer. The twelve genre prototypes are reusable game-domain consumers. Neither defines the architecture itself.
+The architecture is designed to support a reusable set of game-domain consumers. The twelve genre prototypes demonstrate how the same deterministic world and game abstractions can produce different game experiences without making any single genre the definition of the architecture.
 
 ## Architecture at a glance
 
@@ -273,39 +273,46 @@ The project contains browser-side projections of the public contracts used from:
 
 The adapters preserve the relevant public contracts without claiming that external Python runtimes or separate native execution environments run directly inside the browser.
 
-## Applications are consumers
+## Game prototypes are consumers
 
-Applications sit at the edge of the architecture.
+The twelve current prototypes are reusable consumers of the same deterministic world and game-domain architecture:
 
-A racing implementation can consume:
+| Prototype | Primary domain |
+|---|---|
+| Action | Reflex, movement, combat, obstacles |
+| Platformer | Run, jump, platforming |
+| Shooter | Aim, fire, encounters |
+| RPG | Experience, levels, stats, quests |
+| MMORPG | Persistent-world characters, quests, shared state |
+| Action RPG | Real-time combat, progression, loot |
+| Strategy | Planning, tactics, resources |
+| RTS | Continuous time, bases, armies, resources |
+| TBS | Turns, tactics, resource management |
+| Adventure | Exploration, story, environmental puzzles |
+| Visual Novel | Dialogue, artwork, choices |
+| Puzzle | Logic, patterns, spatial problem solving |
 
-- deterministic elemental world data;
-- terrain mesh data;
-- traversal data;
-- a game contract;
-- runtime state;
-- prismatic presentation.
-
-A different application can consume the same world and game-domain abstractions without adopting racing-specific systems.
-
-Likewise, the twelve current genre prototypes demonstrate how different game contracts can consume the architecture:
+All twelve prototypes share the same architectural substrate:
 
 ```text
-                  PRISMATIC EMERGENCE
-                          │
-                  ┌───────┴───────┐
-                  │               │
-             WORLD DATA       GAME CONTRACTS
-                  │               │
-                  └───────┬───────┘
-                          ▼
-                  APPLICATION RUNTIMES
-                    /     |      \
-                   /      |       \
-              Racing   Genre A   Genre B ...
+                    PRISMATIC EMERGENCE
+                           │
+             ┌─────────────┴─────────────┐
+             │                           │
+        WORLD DOMAIN                 GAME DOMAIN
+             │                           │
+             └─────────────┬─────────────┘
+                           ▼
+                 GENRE PROTOTYPE RUNTIMES
+                  /   /   |   \   \
+                 /   /    |    \   \
+            Action ... Strategy ... Puzzle
+                           │
+                           ▼
+                    PRESENTATION LAYER
 ```
 
-The applications are examples of composition, not dependencies of the core architecture.
+A prototype may specialize mechanics, state, controls, or presentation, but it remains a consumer of the shared architecture. No individual prototype is the architectural center.
 
 ## Deterministic game sessions
 
@@ -338,7 +345,7 @@ Concrete applications may extend these contracts with application-specific mecha
 
 ## World representation
 
-The current world generator uses a 64×64 modal grid.
+The current world generator uses a 64×64 modal grid that can be consumed by any of the twelve game-domain prototypes.
 
 Each cell can carry:
 
@@ -351,9 +358,9 @@ Each cell can carry:
 - elevation;
 - material / region information.
 
-The elemental pressures form the basis for terrain, visual composition, traversal or other application-specific interpretations.
+The elemental pressures form the basis for terrain, visual composition, spatial interaction, and other game-specific interpretations.
 
-The same deterministic world can therefore become different experiences without changing the source signal.
+The same deterministic world can therefore become twelve different prototype experiences without changing the source signal.
 
 ## Prismatic emergence
 
@@ -489,13 +496,13 @@ The repository currently contains:
 - a reusable genre-domain abstraction;
 - twelve genre contracts;
 - deterministic genre sessions;
-- independent genre prototype runtime mechanics;
+- independent runtime mechanics for all twelve genre prototypes;
 - browser-safe BOA and HOLOCRON projections;
 - reusable prismatic visual systems;
-- application-specific consumers, including racing;
+- shared spatial and presentation infrastructure;
 - automated reproducibility and build gates.
 
-The architecture is intentionally broader than any one application.
+The architecture is intentionally shared across all twelve game-domain consumers rather than centered on a single application.
 
 ## License
 
