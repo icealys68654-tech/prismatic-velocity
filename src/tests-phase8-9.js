@@ -4,6 +4,7 @@ import { createBOA, createCPUWorkflow, createBOAContext } from "./api/boa-api.js
 import { createFilterPipeline, createHolocronRuntime } from "./api/holocron-api.js";
 import { createPrismaticVelocityAPI } from "./api/prismatic-velocity.js";
 
+export async function runPhase8And9Tests() {
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
 };
@@ -53,3 +54,8 @@ assert(apiRoute.cells.length === 16, "unified API traversal contract failed");
 assert(api.boa && api.holocron, "unified API integration surface missing");
 
 console.log("Phase 8-9 API tests: GREEN");
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await runPhase8And9Tests();
+}
