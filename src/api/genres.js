@@ -1,65 +1,17 @@
-const GENRE_DEFINITIONS = Object.freeze({
-  action: {
-    family: "action",
-    mechanics: ["reflex", "movement", "combat", "obstacles"],
-    route_mode: "real-time",
-  },
-  platformer: {
-    family: "action",
-    mechanics: ["run", "jump", "platforming"],
-    route_mode: "vertical",
-  },
-  shooter: {
-    family: "action",
-    mechanics: ["aim", "fire", "enemy encounters"],
-    route_mode: "combat-corridor",
-  },
-  rpg: {
-    family: "role-playing",
-    mechanics: ["experience", "levels", "stats", "quests"],
-    route_mode: "exploration",
-  },
-  mmorpg: {
-    family: "role-playing",
-    mechanics: ["persistent-world", "characters", "quests", "shared-state"],
-    route_mode: "persistent",
-  },
-  "action-rpg": {
-    family: "role-playing",
-    mechanics: ["real-time-combat", "experience", "stats", "loot"],
-    route_mode: "real-time",
-  },
-  strategy: {
-    family: "strategy",
-    mechanics: ["planning", "tactics", "resources"],
-    route_mode: "territory",
-  },
-  rts: {
-    family: "strategy",
-    mechanics: ["continuous-time", "bases", "armies", "resources"],
-    route_mode: "continuous",
-  },
-  tbs: {
-    family: "strategy",
-    mechanics: ["turns", "tactics", "resource-management"],
-    route_mode: "turn-based",
-  },
-  adventure: {
-    family: "adventure",
-    mechanics: ["exploration", "story", "environmental-puzzles"],
-    route_mode: "exploration",
-  },
-  "visual-novel": {
-    family: "adventure",
-    mechanics: ["dialogue", "artwork", "choices"],
-    route_mode: "narrative",
-  },
-  puzzle: {
-    family: "puzzle",
-    mechanics: ["logic", "patterns", "spatial-problem-solving"],
-    route_mode: "node-graph",
-  },
-});
+import { GENRE_CONTRACTS } from "./genre-framework.js";
+
+const GENRE_DEFINITIONS = Object.freeze(
+  Object.fromEntries(
+    Object.entries(GENRE_CONTRACTS).map(([id, contract]) => [
+      id,
+      {
+        family: contract.family,
+        mechanics: contract.mechanics,
+        route_mode: contract.mode,
+      },
+    ]),
+  ),
+);
 
 const ACTION_GENRES = new Set(["action", "platformer", "shooter", "action-rpg"]);
 
