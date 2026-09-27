@@ -6,6 +6,7 @@ import { runPhase10AdapterTests } from "./tests-phase10-adapters.js";
 import { runPhase11Tests } from "./tests-phase11.js";
 import { runPhase11_2Tests } from "./tests-phase11-2.js";
 import { runGenreFrameworkTests } from "./tests-genre-framework.js";
+import { runGenrePrototypeTests } from "./tests-genre-prototypes.js";
 import { buildPrismaticLightField, reactPrismaticLightField, flowPrismaticLightField } from "./prismatic-light-field.js";
 
 export async function runReproducibilityTests() {
@@ -233,6 +234,13 @@ export async function runReproducibilityTests() {
     name: "Genre framework abstracts all supported genres through linked APIs",
     passed: genreFrameworkMessage === "Genre framework tests passed",
     message: genreFrameworkMessage === "Genre framework tests passed" ? "✓ Genre framework verified" : "✗ Genre framework failed",
+  });
+
+  const genrePrototypeResults = runGenrePrototypeTests();
+  tests.push({
+    name: "All 12 genres have deterministic 3D browser prototype contracts",
+    passed: genrePrototypeResults.length === 12,
+    message: genrePrototypeResults.length === 12 ? "✓ 12 genre prototypes verified" : "✗ Genre prototype catalog incomplete",
   });
 
   const lightWorld = generateSourceWorld({ seed: 0x10203040, width: 64, height: 64 });
