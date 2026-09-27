@@ -2,8 +2,9 @@
 
 Deterministic elemental world generation and a browser-playable 3D racing prototype.
 
-> **Status:** Phase 11.4 is implemented and verified. GitHub Actions is the authoritative CI gate.
+> **Status:** The genre API abstraction is implemented; GitHub Actions remains the authoritative CI gate for completion.
 
+**Genre Contract → BOA / HOLOCRON Projection → Game Session**  
 **Artifact → Seed → Elemental Pressure → Terrain → Runtime → Prismatic Light → 3D World**
 
 ## Concept
@@ -105,6 +106,51 @@ Generated worlds carry their source seed, algorithm version, grid resolution, ge
 
 World generation, traversal, and gameplay state do not depend on Three.js. The renderer consumes deterministic runtime state and projects it into the browser scene.
 
+## Genre API Abstraction
+
+The genre framework is intentionally separate from deterministic elemental world generation and the browser racing prototype. It provides a portable API contract for twelve supported game genres and projects genre state through the browser-safe BOA and HOLOCRON adapters.
+
+| Genre | Family | Contract focus |
+|---|---|---|
+| Action | Action | Reflex, movement, combat, obstacles |
+| Platformer | Action | Run, jump, platforming |
+| Shooter | Action | Aim, fire, encounters |
+| RPG | Role-playing | Experience, levels, stats, quests |
+| MMORPG | Role-playing | Persistent world, characters, shared state |
+| Action RPG | Role-playing | Real-time combat, progression, loot |
+| Strategy | Strategy | Planning, tactics, resources |
+| RTS | Strategy | Continuous time, bases, armies |
+| TBS | Strategy | Turns, tactics, resource management |
+| Adventure | Adventure | Exploration, story, environmental puzzles |
+| Visual Novel | Adventure | Dialogue, artwork, choices |
+| Puzzle | Puzzle | Logic, patterns, spatial problem solving |
+
+The framework lives in `src/api/genre-framework.js`. It exposes genre contracts, deterministic sessions, and BOA / HOLOCRON projection without importing world generation, traversal, or racing code.
+
+```text
+GENRE CONTRACT
+      ↓
+DETERMINISTIC GAME SESSION
+      ↓
+   ┌──┴─────────────┐
+   ↓                ↓
+ BOA            HOLOCRON
+   ↓                ↓
+   └──── GAME STATE ┘
+```
+
+The existing `src/api/genres.js` remains the concrete gameplay implementation for the project prototype. The new framework is the reusable abstraction boundary for other game implementations.
+
+### Explicit boundary
+
+The genre framework does **not** abstract or replace:
+
+- deterministic elemental world generation;
+- the browser-playable 3D racing prototype;
+- the generated terrain, traversal, or racing renderer.
+
+Those remain project-specific systems and can consume the genre contracts without becoming dependencies of them.
+
 ## Gameplay Runtime
 
 The runtime is built around a deterministic traversal route.
@@ -138,11 +184,9 @@ BLOOM / SPECTACLE
 
 The light field is visual state; gameplay authority remains in the runtime.
 
-### Next gate
+### Genre abstraction gate
 
-**Phase 11.5 — Vectorized Light Flow**
-
-The next implementation gate is to connect runtime movement vectors to directional light flow, elemental color dispersion, and the rendered spectacle, then verify the complete path through the same CI commands.
+The next verification gate is the repository CI run for the genre framework changes. Completion requires `npm install`, `npm test`, and `npm run build` to pass on the resulting commit.
 
 ## Framework Boundaries
 
@@ -164,29 +208,20 @@ The application does not claim that the Python BOA runtime or a separate HOLOCRO
 | 11.2 | Complete | Input + renderer bridge |
 | 11.3 | Complete | Deterministic prismatic light field |
 | 11.4 | Complete | Runtime-reactive prismatic light |
-| 11.5 | Next | Vectorized light flow |
+| 11.5 | Implemented | Vectorized light flow |
+| Genre API | Implemented | Twelve genre contracts + BOA / HOLOCRON projection; CI pending for current changes |
 
 ### Current verification
 
-Latest verified main-branch commit:
+The preceding verified gate was Phase 11.4. Phase 11.5 also has successful GitHub Actions runs in the repository history. The new genre-framework changes are **pending their own CI verification** and are not marked complete until the current commit passes the same gates.
 
 ```text
-d2e594e5e6230a05d3bd3977fa7a99e6af26b93f
-Phase 11.4: record verified runtime-reactive light gate
-```
-
-Latest GitHub Actions result:
-
-```text
-Run #57
-completed / success
 npm install
 npm test
 npm run build
 ```
 
-The README is updated only to reflect gates that have actually passed.
-
+The README deliberately separates implemented code from verified completion.
 ## Project Structure
 
 ```text
@@ -209,6 +244,7 @@ The README is updated only to reflect gates that have actually passed.
     ├── prismatic-light-field.js
     ├── integrations.js
     ├── api/
+    │   ├── genre-framework.js
     │   ├── boa-api.js
     │   ├── holocron-api.js
     │   ├── prismatic-velocity.js
