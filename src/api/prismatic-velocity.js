@@ -4,6 +4,9 @@ import { buildTraversalRoute } from "../traversal.js";
 import { createBOA, createCPUWorkflow } from "./boa-api.js";
 import { createFilterPipeline, createHolocronRuntime } from "./holocron-api.js";
 import { createGenreGame, getGenreCatalog } from "./genres.js";
+import { createGenreAdapters } from "../adapters/genre-adapters.js";
+import { createBoaPrismaticsAdapter } from "../adapters/boa-prismatics-adapter.js";
+import { createHolocronAdapter } from "../adapters/holocron-adapter.js";
 
 /**
  * Phase 9 unified Prismatic Velocity API.
@@ -18,6 +21,8 @@ export function createPrismaticVelocityAPI(options = {}) {
   const video = options.video ?? { connect() {}, disconnect() {} };
   const input = options.input ?? { connect() {}, disconnect() {} };
   const holocron = createHolocronRuntime(core, video, input);
+  const adapters = createGenreAdapters();
+  const holocronAdapter = createHolocronAdapter({ core, video, input });
 
   return {
     boa,
