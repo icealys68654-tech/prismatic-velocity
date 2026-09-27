@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PRISMATIC EMERGENCE — Genre Prototypes</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#02030a;font-family:Inter,system-ui,sans-serif}
+.hud{position:fixed;inset:0;pointer-events:none;color:#dff7ff;text-shadow:0 2px 12px #000;z-index:5;padding:18px}
+.title{font-size:20px;letter-spacing:.12em}
+.objective{margin-top:8px;font-size:14px;max-width:720px}
+.controls{margin-top:6px;font-size:12px;opacity:.8}
+.state{position:absolute;right:18px;top:18px;background:#061326cc;border:1px solid #55d9ff66;border-radius:12px;padding:10px 14px}
+.genres{position:absolute;left:18px;bottom:18px;max-width:90%;font-size:11px;opacity:.9;pointer-events:auto}
+.genres a{color:#9ff;text-decoration:none}
+.genres a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/"}}
+</script>
+<script type="module" src="./src/genre-main.js"></script>
+</body>
+</html>
