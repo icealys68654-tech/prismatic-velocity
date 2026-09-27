@@ -71,7 +71,7 @@ The world-source layer (`src/world-source.js`) is decoupled from rendering. It c
 - **Runtime Checks**: The deterministic runtime test suite is green.
 - **Canonical CI Gate**: GitHub Actions executes the repository's real gates on push and pull request.
 - **Gate parity**: The authoritative workflow runs `npm install`, `npm test`, and `npm run build`.
-- **Current verification**: CI run #48 completed successfully for commit `f5ac5979fc8d32fd371b0eb676bf059447d2530b`.
+- **Current verification**: CI run #52 completed successfully for commit `e8b74a4edb33bddddf50d2cc5f96d6810c1ad5e8`.
 - **Simulation rule**: `++1` / `1++` means advance only after the runtime gate is green; the next validation must mirror the same test and build commands rather than inventing a separate gate.
 
 ### Phase 5: Elemental Pressure Production Readiness ✓
@@ -348,7 +348,7 @@ npm test
 
 Tests validate determinism and provenance contracts. GitHub Actions runs the same commands on every push and pull request.
 
-**Status**: Phases 1–11 are implemented in the application architecture. The deterministic runtime and framework/genre adapters are covered by the reproducibility suite. GitHub Actions remains the authoritative CI validation path and currently reports a green run for commit `528d8069eefe46a13409c224f8abe68198e195b2`.
+**Status**: Phases 1–11.3 are implemented in the application architecture. The deterministic runtime, framework/genre adapters, and prismatic light field are covered by the reproducibility suite. GitHub Actions remains the authoritative CI validation path and currently reports a green run #52 for commit `e8b74a4edb33bddddf50d2cc5f96d6810c1ad5e8`.
 
 ## License
 
@@ -361,10 +361,18 @@ GNU GENERAL PUBLIC LICENSE v3.0
 - **Three.js**: Browser rendering adapter.
 
 
+### Phase 11.3: Prismatic Spectacle of Light ✓
+
+- `src/prismatic-light-field.js` converts normalized elemental pressure into a deterministic RGB light field.
+- 128 sampled light points are projected into the Three.js scene with additive blending and bloom.
+- Light intensity remains bounded and is driven from runtime frame state for spectacle without moving gameplay authority into the renderer.
+- Phase 11.3 tests verify deterministic light-field output, bounded color/intensity, and stable source-seed metadata.
+- GitHub Actions runs #50, #51, and #52 verified the real `npm install`, `npm test`, and `npm run build` gates successfully.
+
 ### Phase 11.2: Runtime + Renderer Bridge ✓
 
 - Deterministic keyboard input is normalized through `src/input-controller.js`.
 - `game-runtime.js` remains authoritative for gameplay state and traversal consumption.
 - `runtime-renderer.js` projects runtime world position into the Three.js scene.
 - Phase 11.2 tests verify input normalization, renderer projection, and deterministic metadata.
-- GitHub Actions run #48 verified `npm install`, `npm test`, and `npm run build` successfully for commit `f5ac5979fc8d32fd371b0eb676bf059447d2530b`.
+- GitHub Actions run #52 verified `npm install`, `npm test`, and `npm run build` successfully for commit `e8b74a4edb33bddddf50d2cc5f96d6810c1ad5e8`.
