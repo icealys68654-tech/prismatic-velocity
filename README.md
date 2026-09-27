@@ -18,7 +18,7 @@ This prototype implements the **Prismatic Emergence** transmutation model:
 4. **Terrain Generation**: Element pressures map to height, moisture, temperature, and material properties.
 5. **Provenance**: Every generated world retains source artifact, seed, algorithm version, and grid resolution for reproducibility and inspection.
 
-The racing game is a **rendering adapter** over this deterministic source model—not the primary system. Phases 8–9 add traversal and a unified Prismatic Velocity API so gameplay, rendering, and framework contracts share one application boundary.
+The racing game is a **rendering adapter** over this deterministic source model—not the primary system. Phases 8–9 add traversal and a unified Prismatic Velocity API so gameplay, rendering, and framework contracts share one application boundary. Phase 10 extends that same boundary to major non-racing game genres, with the generated traversal route serving as a deterministic playable action-game path.
 
 ## Architecture
 
@@ -101,6 +101,28 @@ The linked framework repositories are abstracted into Prismatic Velocity's own a
 - Endpoint contract: Routes explicitly honor deterministic start/end rows.
 - No guessed external calls: The application does not pretend the Python BOA runtime or HOLOCRON emulator implementation is directly executable in the browser.
 
+### Phase 10: Unified Major-Genre Gameplay API ✓
+
+Phase 10 keeps the racing loop as a separate rendering adapter and connects the unified Prismatic Velocity API to the major genre contracts requested for the gameplay layer.
+
+- **Action**: real-time movement, reflex actions, combat, and obstacle traversal.
+- **Platformer**: deterministic route traversal with run/jump state.
+- **Shooter**: route-based combat corridor with aiming/fire/ammunition state.
+- **RPG**: traversal drives exploration, experience, levels, stats, and quest progress.
+- **MMORPG**: persistent-world-compatible character/quest/resource state boundary.
+- **Action RPG**: real-time traversal/combat plus experience and character stats.
+- **Strategy**: route nodes become a deterministic tactical/territory graph.
+- **RTS**: continuous movement plus base/army/resource commands.
+- **TBS**: the same route becomes a turn-based tactical sequence.
+- **Adventure**: exploration, examination, interaction, and environmental progression.
+- **Visual Novel**: route nodes can anchor narrative choices and dialogue state.
+- **Puzzle**: route nodes provide a deterministic spatial substrate for pattern/logic state.
+
+New src/api/genres.js provides getGenreCatalog(), createGenreGame(), and stepGenreGame() with deterministic genre-specific state transitions.
+
+createPrismaticVelocityAPI() now exposes getGenreCatalog(), createGame({ genre, world, routeOptions }), stepGame(game, input), and getGameState(game).
+
+The generated Phase 8 traversal route is therefore no longer racing-specific: it is a deterministic gameplay path that can drive action games directly while also serving as the spatial substrate for RPG, strategy, adventure, narrative, and puzzle modes.
 ### Phase 9: Unified Prismatic Velocity API ✓
 
 src/api/prismatic-velocity.js becomes the application-facing orchestration boundary.
@@ -260,7 +282,7 @@ You can swap the renderer without touching the world generation logic.
     ├── world-source.js     # Elemental field generation (core)
     ├── tests.js            # Reproducibility test suite
     ├── api/                # Prismatic Velocity API projections of BOA/HOLOCRON contracts\n    │   ├── boa-api.js\n    │   ├── holocron-api.js\n    │   └── prismatic-velocity.js\n    ├── traversal.js        # Deterministic terrain traversal route\n    ├── integrations.js     # Compatibility facade over local API contracts
-    ├── tests-phase8-9.js   # Traversal/API contract validation\n    └── meshnet/            # (Future) Icosahedron mesh topology
+    ├── tests-phase8-9.js   # Traversal/API contract validation\n    ├── tests-phase10.js    # Major genre/action gameplay validation\n    └── meshnet/            # (Future) Icosahedron mesh topology
 ```
 
 ## Determinism Contract
