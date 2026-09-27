@@ -5,7 +5,7 @@ import { runPhase10Tests } from "./tests-phase10.js";
 import { runPhase10AdapterTests } from "./tests-phase10-adapters.js";
 import { runPhase11Tests } from "./tests-phase11.js";
 import { runPhase11_2Tests } from "./tests-phase11-2.js";
-import { buildPrismaticLightField, reactPrismaticLightField } from "./prismatic-light-field.js";
+import { buildPrismaticLightField, reactPrismaticLightField, flowPrismaticLightField } from "./prismatic-light-field.js";
 
 export async function runReproducibilityTests() {
   const tests = [];
@@ -252,6 +252,19 @@ export async function runReproducibilityTests() {
     name: "Phase 11.4 light field reacts deterministically to runtime state",
     passed: reactivePassed,
     message: reactivePassed ? "✓ Runtime reactivity verified" : "✗ Runtime reactivity mismatch",
+  });
+  const flowStateA = { frame: 9, route_index: 5, position: { x: 100, y: 0, z: 50 } };
+  const flowStateB = { frame: 10, route_index: 6, position: { x: 140, y: 0, z: 50 } };
+  const flowA = flowPrismaticLightField(lightA, flowStateB, flowStateA);
+  const flowB = flowPrismaticLightField(lightA, flowStateB, flowStateA);
+  const flowPassed = JSON.stringify(flowA) === JSON.stringify(flowB) &&
+    flowA.flow_direction.x === 1 && flowA.flow_direction.z === 0 &&
+    flowA.points.every((point) => point.flow >= 0 && point.flow <= 1 &&
+      point.intensity >= 0 && point.intensity <= 1);
+  tests.push({
+    name: "Phase 11.5 directional light flow is deterministic and bounded",
+    passed: flowPassed,
+    message: flowPassed ? "✓ Directional light flow verified" : "✗ Directional flow mismatch",
   });
   return tests;
 }
