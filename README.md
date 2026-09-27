@@ -71,7 +71,7 @@ The world-source layer (`src/world-source.js`) is decoupled from rendering. It c
 - **Runtime Checks**: The deterministic runtime test suite is green.
 - **Canonical CI Gate**: GitHub Actions executes the repository's real gates on push and pull request.
 - **Gate parity**: The authoritative workflow runs `npm install`, `npm test`, and `npm run build`.
-- **Current verification**: CI run #40 completed successfully for commit `528d8069eefe46a13409c224f8abe68198e195b2`.
+- **Current verification**: CI run #42 completed successfully for commit `902f6cd0f497d6890305f4fb2db6a4bd22409e97`.
 - **Simulation rule**: `++1` / `1++` means advance only after the runtime gate is green; the next validation must mirror the same test and build commands rather than inventing a separate gate.
 
 ### Phase 5: Elemental Pressure Production Readiness ✓
