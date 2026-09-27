@@ -1,219 +1,259 @@
 # Prismatic Velocity
 
-A deterministic world-generation engine paired with a browser-playable 3D racing prototype. The system transforms a visual artifact into a seeded elemental field, then renders that field as playable terrain and spectacle.
+Deterministic elemental world generation and a browser-playable 3D racing prototype.
 
-> Status: Green on runtime verification. GitHub Actions is delegated to simulate the real CI gates once the runtime checks are flagged green here.
+> **Status:** Phase 11.4 is implemented and verified. GitHub Actions is the authoritative CI gate.
 
-**Artifact → Seed → Elemental Field → 3D World**
+**Artifact → Seed → Elemental Pressure → Terrain → Runtime → Prismatic Light → 3D World**
 
-![Prismatic Velocity](seed.png)
+## Concept
 
-## Core Design
+**Prismatic Emergence** treats a visual artifact as a question and a generated world as its answer.
 
-This prototype implements the **Prismatic Emergence** transmutation model:
+A seed drives a deterministic 64×64 elemental field. Each cell exposes water, fire, earth, and air pressure, which becomes terrain, traversal data, gameplay state, and finally a Three.js spectacle of light.
 
-1. **Artifact as Question**: A visual seed (image) drives all generation.
-2. **Deterministic Seed**: Image hash → reproducible RNG state. Same artifact always produces the same world.
-3. **Elemental Field**: 64×64 grid where each cell holds an element (water, fire, earth, air) and derived terrain parameters.
-4. **Terrain Generation**: Element pressures map to height, moisture, temperature, and material properties.
-5. **Provenance**: Every generated world retains source artifact, seed, algorithm version, and grid resolution for reproducibility and inspection.
+The design principle is:
 
-The racing game is a **rendering adapter** over this deterministic source model—not the primary system. Phases 8–9 add traversal and a unified Prismatic Velocity API so gameplay, rendering, and framework contracts share one application boundary. Phase 10 extends that same boundary to major non-racing game genres, with the generated traversal route serving as a deterministic playable action-game path.
+> **Gather · Generate · Organize**
+
+The artifact is preserved as the source signal; the generated structures remain inspectable and reproducible.
+
+## Vectored Process
+
+```text
+110101011
+    ↓
+ARTIFACT / VISUAL SIGNAL
+    ↓
+DETERMINISTIC SEED
+    ↓
+ELEMENTAL PRESSURE FIELD
+    ↓
+64×64 MODAL GRID
+    ↓
+TERRAIN + MESH
+    ↓
+TRAVERSAL ROUTE
+    ↓
+GAME RUNTIME
+    ↓
+PRISMATIC LIGHT FIELD
+    ↓
+THREE.JS / BLOOM / CRYSTALS
+    ↓
+CI VERIFICATION
+```
+
+The runtime owns gameplay state. Rendering projects that state into the scene. CI verifies the deterministic contracts.
 
 ## Architecture
 
-```
-seed.png (artifact)
-    ↓
-seedFromImage() → deterministic seed
-    ↓
-generateSourceWorld() → 64×64 elemental grid
-    ↓
-terrain() → Three.js mesh with heights from pressures
-    ↓
-Playable world + bike racing
+```text
+seed.png
+   │
+   ▼
+seedFromImage()
+   │
+   ▼
+generateSourceWorld()
+   │
+   ├── elemental pressures
+   ├── element classification
+   ├── elevation / material
+   └── provenance
+   │
+   ▼
+buildWorldMesh()
+   │
+   ▼
+buildTraversalRoute()
+   │
+   ▼
+createGameRuntime()
+   │
+   ├── input normalization
+   ├── deterministic frame state
+   └── route consumption
+   │
+   ▼
+reactPrismaticLightField()
+   │
+   ▼
+Three.js renderer
 ```
 
-The world-source layer (`src/world-source.js`) is decoupled from rendering. It can be used independently for:
-- Procedural map generation
-- Level design tooling
-- Network synchronization
-- Offline world inspection
+## Core Contracts
+
+### Determinism
+
+Same artifact + same seed + same algorithm version produces the same generated world.
+
+```js
+const a = generateSourceWorld({ seed: 0x12345678 });
+const b = generateSourceWorld({ seed: 0x12345678 });
+
+console.assert(JSON.stringify(a.grid) === JSON.stringify(b.grid));
+```
+
+Different seeds are expected to produce different generated fields except for intentional collisions.
+
+### Provenance
+
+Generated worlds carry their source seed, algorithm version, grid resolution, generator identity, and source artifact metadata.
+
+### Renderer separation
+
+World generation, traversal, and gameplay state do not depend on Three.js. The renderer consumes deterministic runtime state and projects it into the browser scene.
+
+## Gameplay Runtime
+
+The runtime is built around a deterministic traversal route.
+
+- **Action / racing:** real-time route traversal and player actions.
+- **Platformer / shooter:** the same spatial route provides movement and action state.
+- **RPG / MMORPG / action RPG:** route nodes provide deterministic exploration and progression state.
+- **Strategy / RTS / TBS:** route cells provide a deterministic tactical substrate.
+- **Adventure / visual novel:** route nodes can anchor exploration and narrative state.
+- **Puzzle:** route geometry provides a deterministic spatial substrate.
+
+The genre layer is exposed through `src/api/genres.js`, while `src/game-runtime.js` remains the runtime state boundary.
+
+## Prismatic Light
+
+The current light system converts elemental pressure into deterministic RGB values and projects sampled points into the scene.
+
+Phase 11.4 adds runtime reaction:
+
+```text
+RUNTIME POSITION
+      ↓
+PROXIMITY FIELD
+      ↓
+LIGHT INTENSITY
+      ↓
+ADDITIVE POINT LIGHT
+      ↓
+BLOOM / SPECTACLE
+```
+
+The light field is visual state; gameplay authority remains in the runtime.
+
+### Next gate
+
+**Phase 11.5 — Vectorized Light Flow**
+
+The next implementation gate is to connect runtime movement vectors to directional light flow, elemental color dispersion, and the rendered spectacle, then verify the complete path through the same CI commands.
+
+## Framework Boundaries
+
+The project contains browser-safe application projections of the public contracts needed from:
+
+- [BOA BIG API Framework](https://github.com/somsung46813-creator/boa-bigapi-framework)
+- [HOLOCRON Abstraction SDK](https://github.com/somsung46813-creator/HOLOCRON-Abstraction-SDK)
+
+The application does not claim that the Python BOA runtime or a separate HOLOCRON emulator executes directly inside the browser. Their contracts are isolated behind local adapters.
 
 ## Status to Completion
 
-### Phase 1: Deterministic Generation ✓
+| Phase | State | Verified gate |
+|---|---|---|
+| 1–7 | Complete | Deterministic generation, pressure field, mesh, continuity |
+| 8–9 | Complete | Traversal and unified API contracts |
+| 10 | Complete | Major genre gameplay contracts |
+| 11 | Complete | Deterministic gameplay runtime |
+| 11.2 | Complete | Input + renderer bridge |
+| 11.3 | Complete | Deterministic prismatic light field |
+| 11.4 | Complete | Runtime-reactive prismatic light |
+| 11.5 | Next | Vectorized light flow |
 
-- **Artifact Storage**: Visual seed stored verbatim on disk (110101011 binary state preserved).
-- **Seed Derivation**: `seedFromImage()` produces reproducible 32-bit integer.
-- **Elemental Field**: 64×64 grid with water/fire/earth/air classification per cell.
-- **Terrain Mapping**: Element pressures → height, material, region metadata.
-- **Provenance Tracking**: Every world carries seed envelope (source, version, resolution, timestamp).
+### Current verification
 
-### Phase 2: Reproducibility & Testing ✓
+Latest verified main-branch commit:
 
-- **Determinism Validation**: Same seed → identical grid (10/10 test suite green).
-- **Variance Testing**: Different seed → different grid.
-- **Provenance Verification**: Metadata complete and immutable.
-- **Cell Structure**: All cells have required properties (element, elevation, pressures, region).
-- **Value Ranges**: Elevation [0,1], pressures balanced, elements valid.
-
-### Phase 3: Browser Spectacle ✓
-
-- **Three.js Rendering Adapter**: World-source feeds terrain mesh.
-- **Element-Driven Visuals**: Water (cool blue), fire (warm orange), earth (neutral), air (light).
-- **Racing Loop**: Player bike, 9 AI riders, track, camera, controls intact.
-- **HUD & Feedback**: Speed, nitro, shield, status panel.
-- **Post-Processing**: Bloom, tone mapping, fog, lighting, shadows.
-
-### Phase 4: CI/CD & Verification ✓
-
-- **Runtime Checks**: The deterministic runtime test suite is green.
-- **Canonical CI Gate**: GitHub Actions executes the repository's real gates on push and pull request.
-- **Gate parity**: The authoritative workflow runs `npm install`, `npm test`, and `npm run build`.
-- **Current verification**: CI run #60 completed successfully for commit `c66c3366a86709bb42b65f8c5cb1d9c86b1ecdc9`.
-- **Simulation rule**: `++1` / `1++` means advance only after the runtime gate is green; the next validation must mirror the same test and build commands rather than inventing a separate gate.
-
-### Phase 5: Elemental Pressure Production Readiness ✓
-
-- Pressure normalization: Water/fire/earth/air pressures form a normalized mixture per cell.
-- Deterministic balance: Pressure totals are validated to sum to 1.0.
-- Epic-Random-Maps alignment: The elemental field remains the source abstraction.
-
-### Phase 6: Renderer-Neutral Mesh ✓
-
-- Indexed geometry: 64×64 elemental cells become 4,096 vertices and 7,938 triangles.
-- Renderer separation: Mesh data is independent of Three.js.
-- Determinism: Identical source worlds produce identical mesh data.
-
-### Phase 7: Spatial Continuity ✓
-
-- Neighbor-aware elevation: Each mesh height blends its elemental height with its local 8-neighbor field.
-- Transition metadata: Elemental boundary transitions are counted for inspection.
-- Continuity validation: Finite, bounded, deterministic mesh output is tested.
-
-### Phase 8: Traversal + API Refactoring ✓
-
-The linked framework repositories are abstracted into Prismatic Velocity's own application API while preserving their documented public contracts.
-
-- BOA abstraction: BOAContext, CPUWorkflow, BOA, and Prismatics contracts are projected into browser-safe JavaScript.
-- HOLOCRON abstraction: FilterPipeline and HolocronRuntime contracts are projected into the application boundary.
-- Traversal layer: A deterministic left-to-right route is generated directly from the elemental world, respecting terrain height and elemental cost.
-- Endpoint contract: Routes explicitly honor deterministic start/end rows.
-- No guessed external calls: The application does not pretend the Python BOA runtime or HOLOCRON emulator implementation is directly executable in the browser.
-
-### Phase 10: Unified Major-Genre Gameplay API ✓
-
-Phase 10 keeps the racing loop as a separate rendering adapter and connects the unified Prismatic Velocity API to the major genre contracts requested for the gameplay layer.
-
-- **Action**: real-time movement, reflex actions, combat, and obstacle traversal.
-- **Platformer**: deterministic route traversal with run/jump state.
-- **Shooter**: route-based combat corridor with aiming/fire/ammunition state.
-- **RPG**: traversal drives exploration, experience, levels, stats, and quest progress.
-- **MMORPG**: persistent-world-compatible character/quest/resource state boundary.
-- **Action RPG**: real-time traversal/combat plus experience and character stats.
-- **Strategy**: route nodes become a deterministic tactical/territory graph.
-- **RTS**: continuous movement plus base/army/resource commands.
-- **TBS**: the same route becomes a turn-based tactical sequence.
-- **Adventure**: exploration, examination, interaction, and environmental progression.
-- **Visual Novel**: route nodes can anchor narrative choices and dialogue state.
-- **Puzzle**: route nodes provide a deterministic spatial substrate for pattern/logic state.
-
-New src/api/genres.js provides getGenreCatalog(), createGenreGame(), and stepGenreGame() with deterministic genre-specific state transitions.
-
-createPrismaticVelocityAPI() now exposes getGenreCatalog(), createGame({ genre, world, routeOptions }), stepGame(game, input), and getGameState(game).
-
-The generated Phase 8 traversal route is therefore no longer racing-specific: it is a deterministic gameplay path that can drive action games directly while also serving as the spatial substrate for RPG, strategy, adventure, narrative, and puzzle modes.
-### Phase 11: Deterministic Gameplay Runtime ✓
-
-Phase 11 turns the deterministic traversal route into a runtime state machine without moving gameplay authority into the renderer.
-
-- `src/game-runtime.js` owns start/stop, frame progression, route consumption, deterministic state snapshots, and world-space position.
-- `src/player-controller.js` provides deterministic movement/jump state.
-- `src/tests-phase11.js` validates runtime initialization, route consumption, jumping, and repeated-input determinism.
-- GitHub Actions run #40 verified the full test and build gates successfully.
-
-### Phase 9: Unified Prismatic Velocity API ✓
-
-src/api/prismatic-velocity.js becomes the application-facing orchestration boundary.
-
-- generateWorld() → deterministic elemental source.
-- buildMesh() → renderer-neutral terrain geometry.
-- buildRoute() → deterministic traversal data.
-- execute() → BOA-compatible workflow boundary.
-- query() / addFilter() → HOLOCRON-compatible filter boundary.
-- runtime.start() / runtime.stop() → HOLOCRON-compatible runtime boundary.
-- src/integrations.js is refactored to consume these local contracts instead of maintaining simulated copies of BOA/HOLOCRON internals.
-- Phase 8–9 contract tests verify traversal determinism, API identity preservation, filter ordering, runtime state, mesh generation, and unified API composition.
-
-Referenced framework contracts:
-
-- BOA BIG O API Framework: https://github.com/somsung46813-creator/boa-bigapi-framework
-- HOLOCRON Abstraction SDK: https://github.com/somsung46813-creator/HOLOCRON-Abstraction-SDK
-## Vectored Process
-
-The system operates as a deterministic transformation pipeline:
-
-```
-artifact (visual signal)
-  ↓
-hash → seed (110101011 verbatim stored)
-  ↓
-rng(seed) → pseudo-random but deterministic
-  ↓
-pressures(x, y, seed) → water, fire, earth, air
-  ↓
-argmax(pressures) → element (categorical)
-  ↓
-f(pressures, region) → elevation, material
-  ↓
-Three.js mesh ← heights per grid cell
-  ↓
-spectacle of light ← bloom, tone, shadow, emissive
-  ↓
-playable world
+```text
+d2e594e5e6230a05d3bd3977fa7a99e6af26b93f
+Phase 11.4: record verified runtime-reactive light gate
 ```
 
-Each stage is:
-- **Deterministic**: Same input → same output, always.
-- **Inspectable**: Cell data exposes pressures, region, provenance.
-- **Modular**: World-source decoupled from renderer.
-- **Reproducible**: Seed + version + artifact → identical world across runs.
+Latest GitHub Actions result:
+
+```text
+Run #57
+completed / success
+npm install
+npm test
+npm run build
+```
+
+The README is updated only to reflect gates that have actually passed.
+
+## Project Structure
+
+```text
+.
+├── index.html
+├── seed.png
+├── package.json
+├── project.json
+├── README.md
+└── src/
+    ├── main.js
+    ├── seed.js
+    ├── world-source.js
+    ├── world-mesh.js
+    ├── traversal.js
+    ├── game-runtime.js
+    ├── player-controller.js
+    ├── input-controller.js
+    ├── runtime-renderer.js
+    ├── prismatic-light-field.js
+    ├── integrations.js
+    ├── api/
+    │   ├── boa-api.js
+    │   ├── holocron-api.js
+    │   ├── prismatic-velocity.js
+    │   └── genres.js
+    ├── adapters/
+    │   ├── boa-prismatics-adapter.js
+    │   ├── holocron-adapter.js
+    │   └── genre-adapters.js
+    └── tests*.js
+```
 
 ## Quick Start
 
-The project uses browser ES modules, so open it through a local HTTP server rather than directly from `file://`.
+The browser application uses ES modules and should be served through HTTP.
 
 ```bash
 python -m http.server 8080
 ```
 
-Open [http://localhost:8080/](http://localhost:8080/) in a WebGL-capable browser.
+Open `http://localhost:8080/` in a WebGL-capable browser.
 
-Any static HTTP server works. For example, with Node.js:
+For repository verification:
 
 ```bash
-npx serve .
+npm install
+npm test
+npm run build
 ```
 
-No `npm install` step is needed: Three.js is referenced from jsDelivr in `index.html`.
+GitHub Actions runs the same gates on pushes to `main` and pull requests.
 
 ## Controls
 
 | Key | Action |
-| --- | --- |
+|---|---|
 | `W` | Accelerate |
 | `S` | Brake |
 | `A` / `D` | Steer |
-| `Left Shift` | Use nitro while moving |
-| `Space` | Fire a plasma projectile |
-| `R` | Reset the player state |
+| `Left Shift` | Nitro |
+| `Space` | Fire |
+| `R` | Reset |
 
-## API Usage
+## Deterministic API Example
 
-### Generate a Deterministic World
-
-```javascript
+```js
 import { generateSourceWorld } from "./src/world-source.js";
 
 const world = generateSourceWorld({
@@ -224,170 +264,31 @@ const world = generateSourceWorld({
 });
 
 console.log(world.provenance);
-// {
-//   source_artifact: "seed.png",
-//   seed: 305419896,
-//   algorithm_version: "3",
-//   grid_resolution: "64x64",
-//   generated_at: "2026-09-26T12:07:54.000Z",
-//   generator: "Epic-Random-Maps / Prismatic Velocity"
-// }
-
 console.log(world.grid[32][32]);
-// {
-//   x: 32,
-//   y: 32,
-//   element: "earth",
-//   elevation: 0.62,
-//   pressures: { water: 0.21, fire: 0.18, earth: 0.68, air: 0.35 },
-//   region: 7
-// }
 ```
 
-### Inspect Element Pressures
+Each cell exposes coordinates, element classification, elevation, elemental pressures, and region metadata.
 
-Each cell in the 64×64 grid maintains four elemental pressures that determine:
+## Development Rule
 
-- **Water**: Low elevation, high moisture, cool thermal regions.
-- **Fire**: High thermal pressure, rough terrain, boundary tension.
-- **Earth**: Structural stability, mountain/plateau formation.
-- **Air**: Elevated corridors, light transition zones.
+The `++1` / `1++` process means:
 
-The element is chosen by highest pressure. Pressures are inspectable at runtime for debugging or tooling.
-
-### Run Reproducibility Tests
-
-```bash
-node src/tests.js
+```text
+CONFIRM CURRENT CHANGES
+        ↓
+ABSTRACT THE NEXT BEST STEP
+        ↓
+IMPLEMENT
+        ↓
+RUN THE SAME REAL CI GATES
+        ↓
+IF GREEN → UPDATE README STATUS
+        ↓
+CONTINUE
 ```
 
-This validates:
-- Determinism (same seed → same grid)
-- Variance (different seed → different grid)
-- Provenance metadata completeness
-- Grid dimensions and cell structure
-- Element and elevation value ranges
-- Pressure balance across cells
-
-### Render Adapter
-
-`src/main.js` demonstrates a Three.js rendering adapter over the world-source. The adapter:
-- Reads the 64×64 grid
-- Maps element and elevation to mesh height
-- Applies element colors to crystal decoration
-- Preserves the racing loop and HUD as independent systems
-
-You can swap the renderer without touching the world generation logic.
-
-## Project Structure
-
-```
-.
-├── index.html              # Entry point, HUD styles, import map
-├── seed.png                # Visual artifact (hashed to produce seed)
-├── project.json            # Project metadata
-└── src/
-    ├── main.js             # Three.js scene, bikes, track, racing loop
-    ├── seed.js             # Image hashing, seed derivation
-    ├── world-source.js     # Elemental field generation (core)
-    ├── tests.js            # Reproducibility test suite
-    ├── api/                # Prismatic Velocity API projections of BOA/HOLOCRON contracts\n    │   ├── boa-api.js\n    │   ├── holocron-api.js\n    │   └── prismatic-velocity.js\n    ├── traversal.js        # Deterministic terrain traversal route\n    ├── integrations.js     # Compatibility facade over local API contracts
-    ├── tests-phase8-9.js   # Traversal/API contract validation\n    ├── tests-phase10.js    # Major genre/action gameplay validation\n    └── meshnet/            # (Future) Icosahedron mesh topology
-```
-
-## Determinism Contract
-
-Same artifact + same seed → identical world.
-Different seed → different world.
-
-This is testable:
-
-```javascript
-const w1 = generateSourceWorld({ seed: 0x12345678 });
-const w2 = generateSourceWorld({ seed: 0x12345678 });
-console.assert(JSON.stringify(w1.grid) === JSON.stringify(w2.grid)); // true
-
-const w3 = generateSourceWorld({ seed: 0x87654321 });
-console.assert(JSON.stringify(w1.grid) === JSON.stringify(w3.grid)); // false
-```
-
-## Epic-Random-Maps Integration
-
-This repo wires **Epic-Random-Maps** as the world-source layer. The transmutation model is shared:
-
-- **Artifact gathering**: Extract visual evidence
-- **Elemental generation**: Derive water/fire/earth/air pressures
-- **Grid organization**: Classify cells into 64×64 modal grid
-- **Provenance preservation**: Attach seed envelope to every generated world
-
-Epic-Random-Maps can be extended with deeper agents (AIAgentGatherer, MeshGeneratorAgent, ModalGridAgent) without breaking the rendering adapter.
-
-## Runtime Integration
-
-`src/integrations.js` provides optional adapter boundaries for external systems:
-
-- **BOA adapter** (`boa-bigapi-framework`): Game state workflow (view, input, model, packet, frame processing).
-- **HOLOCRON adapter** (`HOLOCRON-Abstraction-SDK`): Item filtering and abstract state management.
-
-Both are sandboxed and safe to fail. If unavailable, the game runs standalone.
-
-## Browser Requirements
-
-- WebGL 2 support
-- JavaScript ES modules enabled
-- Modern browser (Chrome, Firefox, Safari, Edge)
-- Network access to fetch Three.js from jsDelivr (unless import map is modified)
-
-## Development
-
-```bash
-npm install
-npm run build
-npm test
-```
-
-Tests validate determinism and provenance contracts. GitHub Actions runs the same commands on every push and pull request.
-
-**Status**: Phases 1–11.5 are implemented in the application architecture. The deterministic runtime, framework/genre adapters, and prismatic light field are covered by the reproducibility suite. GitHub Actions remains the authoritative CI validation path and currently reports a green run #60 for commit `c66c3366a86709bb42b65f8c5cb1d9c86b1ecdc9`.
+No phase is marked complete merely because code exists. Completion requires the repository's real runtime and build gates to pass.
 
 ## License
 
-GNU GENERAL PUBLIC LICENSE v3.0
-
-## Related Work
-
-- **Epic-Random-Maps**: Source design for elemental transmutation and world generation.
-- **Prismatic Emergence**: Conceptual framework for artifact-driven content generation.
-- **Three.js**: Browser rendering adapter.
-
-
-### Phase 11.5: Vectorized Light Flow ✓
-
-- Runtime movement between consecutive state snapshots defines a normalized light-flow direction.
-- Directional alignment and player proximity modulate each sampled light point deterministically.
-- The renderer applies computed intensity to the live Three.js vertex-color buffer; visual response is no longer stored in a detached array.
-- Phase 11.5 tests verify deterministic flow direction and bounded flow/intensity values.
-- GitHub Actions runs #58, #59, and #60 verified the real `npm install`, `npm test`, and `npm run build` gates successfully.
-
-### Phase 11.4: Runtime-Reactive Prismatic Light ✓
-
-- Runtime state now modulates the prismatic field through a deterministic proximity transform.
-- Light response carries runtime frame and route-index metadata without becoming gameplay authority.
-- Phase 11.4 tests verify repeatable runtime reaction and bounded intensity/proximity values.
-- GitHub Actions runs #54, #55, and #56 verified the real `npm install`, `npm test`, and `npm run build` gates successfully.
-
-### Phase 11.3: Prismatic Spectacle of Light ✓
-
-- `src/prismatic-light-field.js` converts normalized elemental pressure into a deterministic RGB light field.
-- 128 sampled light points are projected into the Three.js scene with additive blending and bloom.
-- Light intensity remains bounded and is driven from runtime frame state for spectacle without moving gameplay authority into the renderer.
-- Phase 11.3 tests verify deterministic light-field output, bounded color/intensity, and stable source-seed metadata.
-- GitHub Actions runs #50, #51, and #52 verified the real `npm install`, `npm test`, and `npm run build` gates successfully.
-
-### Phase 11.2: Runtime + Renderer Bridge ✓
-
-- Deterministic keyboard input is normalized through `src/input-controller.js`.
-- `game-runtime.js` remains authoritative for gameplay state and traversal consumption.
-- `runtime-renderer.js` projects runtime world position into the Three.js scene.
-- Phase 11.2 tests verify input normalization, renderer projection, and deterministic metadata.
-- GitHub Actions run #52 verified `npm install`, `npm test`, and `npm run build` successfully for commit `e8b74a4edb33bddddf50d2cc5f96d6810c1ad5e8`.
+GNU General Public License v3.0.
