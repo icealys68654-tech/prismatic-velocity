@@ -1,8 +1,5 @@
 import { createGenreGame } from "./api/genres.js";
-
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
+import { buildTraversalRoute } from "./traversal.js";
 
 function routePosition(cell, cellSize = 5000 / 63) {
   return {
@@ -12,16 +9,16 @@ function routePosition(cell, cellSize = 5000 / 63) {
   };
 }
 
-export function createGameRuntime({ genre = "action", world, routeOptions = {}, cellSize } = {}) {
+export function createGameRuntime({
+  genre = "action",
+  world,
+  route,
+  routeOptions = {},
+  cellSize = 5000 / 63,
+} = {}) {
   if (!world) throw new Error("createGameRuntime requires a generated world");
-  const route = world.route ?? null;
-  const game = createGenreGame({
-    genre,
-    world,
-    route: route ?? (() => {
-      throw new Error("createGameRuntime requires a traversal route");
-    })(),
-  });
+  const traversal = route ?? buildTraversalRoute(world, routeOptions);
+  const game = createGenreGame({ genre, world, route: traversal });
   return createRuntimeFromGame(game, { cellSize });
 }
 
@@ -36,12 +33,11 @@ export function createRuntimeFromGame(game, { cellSize = 5000 / 63 } = {}) {
 
   function state() {
     const snapshot = game.getState();
-    const cell = snapshot.node;
     return {
       frame,
       running,
       ...snapshot,
-      position: routePosition(cell, cellSize),
+      position: routePosition(snapshot.node, cellSize),
       previous_route_index: previousState.route_index,
     };
   }
