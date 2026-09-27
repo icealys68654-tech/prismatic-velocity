@@ -27,6 +27,8 @@ export function createPrismaticVelocityAPI(options = {}) {
   return {
     boa,
     holocron,
+    adapters,
+    holocronAdapter,
 
     generateWorld(params = {}) {
       return generateSourceWorld(params);
@@ -38,6 +40,11 @@ export function createPrismaticVelocityAPI(options = {}) {
 
     buildRoute(world, options = {}) {
       return buildTraversalRoute(world, options);
+    },
+
+    createPrismaticsAdapter(backend = options.backend) {
+      if (!backend) throw new Error("createPrismaticsAdapter requires a BOA compute backend");
+      return createBoaPrismaticsAdapter(backend);
     },
 
     getGenreCatalog() {
