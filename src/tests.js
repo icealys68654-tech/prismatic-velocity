@@ -44,7 +44,7 @@ export async function runReproducibilityTests() {
     const world = generateSourceWorld({ seed: 0xdeadbeef });
     const prov = world.provenance;
     const passed = prov.seed &&
-                   prov.algorithm_version === "2" &&
+                   prov.algorithm_version === "3" &&
                    prov.grid_resolution === "64x64" &&
                    prov.generator &&
                    prov.generated_at;
@@ -194,6 +194,27 @@ export async function runReproducibilityTests() {
     };
   };
   tests.push(test11());
+
+
+  // Test 12: Phase 7 mesh preserves deterministic spatial continuity metadata
+  const test12 = () => {
+    const world = generateSourceWorld({ seed: 0x13579bdf, width: 64, height: 64 });
+    const mesh1 = buildWorldMesh(world);
+    const mesh2 = buildWorldMesh(world);
+    const finite = mesh1.vertices.every((value) => Number.isFinite(value));
+    const bounded = mesh1.vertices.every((value, i) => i % 3 !== 1 || value >= -52 && value <= 172);
+    const passed = finite && bounded && mesh1.transition_count >= 0 &&
+                   mesh1.transition_count <= (63 * 64) + (64 * 63) &&
+                   JSON.stringify(mesh1) === JSON.stringify(mesh2);
+    return {
+      name: "Phase 7 mesh continuity is deterministic and bounded",
+      passed,
+      message: passed
+        ? `✓ Continuity verified: ${mesh1.transition_count} elemental transitions`
+        : "✗ Continuity or bounds mismatch",
+    };
+  };
+  tests.push(test12());
 
   return tests;
 }
