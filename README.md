@@ -22,7 +22,7 @@ DETERMINISTIC SEED
 ELEMENTAL PRESSURE
         │
         ▼
-64×64 MODAL GRID
+PARAMETERIZED MODAL GRID
         │
         ├──────────────► WORLD DATA / TERRAIN
         │
@@ -85,14 +85,14 @@ The process is intentionally inspectable. Each stage consumes structured data an
 
 ### Determinism
 
-The same artifact, seed, dimensions, and algorithm version produce the same generated structures.
+The same artifact, seed, spatial dimensions, and algorithm version produce the same generated structures.
 
 ```js
 const a = generateSourceWorld({
   artifact: "seed.png",
   seed: 0x12345678,
-  width: 64,
-  height: 64,
+  width,
+  height,
 });
 
 const b = generateSourceWorld({
@@ -109,11 +109,11 @@ Different seeds are expected to produce different fields except where intentiona
 
 ### Provenance
 
-Generated structures retain information describing their origin, including source seed, algorithm version, resolution, generator identity, and source metadata.
+Generated structures retain information describing their origin, including source seed, algorithm version, spatial dimensions, generator identity, and source metadata.
 
 ### Inspectability
 
-The elemental field is represented as explicit cells rather than hidden renderer state. Cells expose coordinates, classification, elevation, elemental pressures, and region information.
+The elemental field is represented as explicit spatial elements rather than hidden renderer state. Cells expose coordinates, classification, elevation, elemental pressures, and region information.
 
 ### Separation of concerns
 
@@ -345,11 +345,12 @@ The twelve prototypes extend these contracts with genre-specific mechanics witho
 
 ## World representation
 
-The current world generator uses a 64×64 modal grid that can be consumed by any of the twelve game-domain prototypes.
+The world generator constructs a parameterized modal grid whose dimensions are part of the generation input. The modal world is not bounded to a fixed resolution; its width, height, or other spatial dimensions may be selected according to the artifact, seed, algorithm version, and consuming game-domain prototype.
 
 Each cell can carry:
 
-- `x`, `y` coordinates;
+- spatial coordinates appropriate to the generated dimensionality;
+- grid or field indices when a discrete modal representation is used;
 - elemental classification;
 - water pressure;
 - fire pressure;
@@ -380,7 +381,7 @@ SPATIAL
   └──────────► WORLD / GAME STATE
 ```
 
-The transmutation cube is a conceptual boundary for gathering these signals. The generated seed becomes the reproducible identity of the resulting world.
+The transmutation cube is a conceptual boundary for gathering these signals, not a fixed spatial-resolution boundary. The generated seed becomes the reproducible identity of the resulting world.
 
 **A seed is a question.  
 The map is its answer.**
