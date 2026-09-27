@@ -87,7 +87,7 @@ export function generateSourceWorld({ artifact = "seed.png", seed = 0x50524953, 
     provenance: {
       source_artifact: artifact,
       seed,
-      algorithm_version: "2",
+      algorithm_version: "3",
       grid_resolution: `${width}x${height}`,
       generated_at: new Date().toISOString(),
       generator: "Epic-Random-Maps / Prismatic Velocity",
