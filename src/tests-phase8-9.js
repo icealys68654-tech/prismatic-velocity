@@ -29,7 +29,7 @@ const filterPipeline = createFilterPipeline();
 filterPipeline.use({
   id: "query",
   order: 100,
-  apply: (items, query) => items.filter((item) => item.name.includes(query)),
+  run: (items, ctx) => items.filter((item) => item.name.includes(ctx.query)),
 });
 const filtered = filterPipeline.run({
   items: [{ name: "alpha" }, { name: "beta" }],
