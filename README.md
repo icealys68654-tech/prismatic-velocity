@@ -66,12 +66,13 @@ The world-source layer (`src/world-source.js`) is decoupled from rendering. It c
 - **HUD & Feedback**: Speed, nitro, shield, status panel.
 - **Post-Processing**: Bloom, tone mapping, fog, lighting, shadows.
 
-### Phase 4: CI/CD & Verification ✅
+### Phase 4: CI/CD & Verification ✓
 
-- **Runtime Checks**: Green locally and ready to hand off to CI.
-- **GitHub Actions Delegation**: Real CI gates are delegated to GitHub Actions when runtime validation remains green.
-- **Simulation Gate**: `++1 or 1++` next best step confirms the project is ready to simulate the canonical CI path.
-- **Status to Completion**: The repository is in a green state for gate simulation and can advance to full CI execution.
+- **Runtime Checks**: The deterministic runtime test suite is green.
+- **Canonical CI Gate**: GitHub Actions executes the repository's real gates on push and pull request.
+- **Gate parity**: The authoritative workflow runs `npm install`, `npm test`, and `npm run build`.
+- **Current verification**: CI run #40 completed successfully for commit `528d8069eefe46a13409c224f8abe68198e195b2`.
+- **Simulation rule**: `++1` / `1++` means advance only after the runtime gate is green; the next validation must mirror the same test and build commands rather than inventing a separate gate.
 
 ### Phase 5: Elemental Pressure Production Readiness ✓
 
@@ -123,6 +124,15 @@ New src/api/genres.js provides getGenreCatalog(), createGenreGame(), and stepGen
 createPrismaticVelocityAPI() now exposes getGenreCatalog(), createGame({ genre, world, routeOptions }), stepGame(game, input), and getGameState(game).
 
 The generated Phase 8 traversal route is therefore no longer racing-specific: it is a deterministic gameplay path that can drive action games directly while also serving as the spatial substrate for RPG, strategy, adventure, narrative, and puzzle modes.
+### Phase 11: Deterministic Gameplay Runtime ✓
+
+Phase 11 turns the deterministic traversal route into a runtime state machine without moving gameplay authority into the renderer.
+
+- `src/game-runtime.js` owns start/stop, frame progression, route consumption, deterministic state snapshots, and world-space position.
+- `src/player-controller.js` provides deterministic movement/jump state.
+- `src/tests-phase11.js` validates runtime initialization, route consumption, jumping, and repeated-input determinism.
+- GitHub Actions run #40 verified the full test and build gates successfully.
+
 ### Phase 9: Unified Prismatic Velocity API ✓
 
 src/api/prismatic-velocity.js becomes the application-facing orchestration boundary.
@@ -338,7 +348,7 @@ npm test
 
 Tests validate determinism and provenance contracts. GitHub Actions runs the same commands on every push and pull request.
 
-**Status**: Phases 1–9 are implemented in the application architecture. Phase 8–9 API contracts are covered by the reproducibility test suite; GitHub Actions remains the authoritative CI validation path.
+**Status**: Phases 1–11 are implemented in the application architecture. The deterministic runtime and framework/genre adapters are covered by the reproducibility suite. GitHub Actions remains the authoritative CI validation path and currently reports a green run for commit `528d8069eefe46a13409c224f8abe68198e195b2`.
 
 ## License
 
