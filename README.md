@@ -8,7 +8,7 @@ PRISMATIC EMERGENCE treats an artifact or visual signal as an input to a determi
 
 **Gather · Generate · Organize**
 
-The architecture is designed to support a reusable set of game-domain consumers. The twelve genre prototypes demonstrate how the same deterministic world and game abstractions can produce different game experiences without making any single genre the definition of the architecture.
+PRISMATIC EMERGENCE is a reusable game-domain architecture. Its twelve genre prototypes are framed as first-class game-domain expressions of the same deterministic substrate: Action, Platformer, Shooter, RPG, MMORPG, Action RPG, Strategy, RTS, TBS, Adventure, Visual Novel, and Puzzle. Each prototype specializes its mechanics while sharing the same world, contracts, runtime principles, provenance, and verification model.
 
 ## Architecture at a glance
 
@@ -148,9 +148,9 @@ Primary modules include:
 
 The world domain produces reusable data. It does not decide what kind of game or application consumes that data.
 
-### 2. Game-domain abstraction
+### 2. Game-domain architecture
 
-The game domain defines reusable contracts for game genres and deterministic sessions.
+The game domain is the central architectural layer. It defines reusable contracts, deterministic sessions, genre mechanics, and the shared runtime model through which all twelve prototypes are framed.
 
 Primary abstraction:
 
@@ -173,11 +173,11 @@ The current contract catalog includes:
 | Visual Novel | Adventure | Dialogue, artwork, choices |
 | Puzzle | Puzzle | Logic, patterns, spatial problem solving |
 
-These are **contracts**, not the architecture's identity. Additional game implementations can consume the same abstraction without changing the world generator.
+These twelve contracts form the current game-domain vocabulary of PRISMATIC EMERGENCE. They are deliberately parallel: no genre is the primary application, and no single prototype defines the architecture.
 
 ### 3. Runtime domain
 
-The runtime domain converts contracts and inputs into deterministic state transitions.
+The runtime domain converts the shared game contracts and inputs into deterministic state transitions for the twelve prototype forms.
 
 Relevant boundaries include:
 
@@ -189,7 +189,7 @@ Relevant boundaries include:
 
 The runtime owns state such as position, progression, actions, resources, encounters, choices, or other mechanics appropriate to a selected contract.
 
-A runtime may consume generated world data, but the generic game contract remains portable.
+Each prototype runtime may specialize its mechanics while remaining anchored to the same portable game-domain contract.
 
 ### 4. Presentation domain
 
@@ -273,9 +273,9 @@ The project contains browser-side projections of the public contracts used from:
 
 The adapters preserve the relevant public contracts without claiming that external Python runtimes or separate native execution environments run directly inside the browser.
 
-## Game prototypes are consumers
+## Twelve game-domain prototypes
 
-The twelve current prototypes are reusable consumers of the same deterministic world and game-domain architecture:
+The twelve prototypes are framed as first-class consumers of PRISMATIC EMERGENCE. Together they define a reusable spectrum of game-domain behavior built over the same deterministic world and runtime architecture:
 
 | Prototype | Primary domain |
 |---|---|
@@ -312,7 +312,7 @@ All twelve prototypes share the same architectural substrate:
                     PRESENTATION LAYER
 ```
 
-A prototype may specialize mechanics, state, controls, or presentation, but it remains a consumer of the shared architecture. No individual prototype is the architectural center.
+Each prototype specializes mechanics, state, controls, and presentation while preserving the same architectural contracts. The twelve prototypes are peers within the game domain; no individual prototype is the architectural center.
 
 ## Deterministic game sessions
 
@@ -341,7 +341,7 @@ The framework exposes:
 - BOA projection;
 - HOLOCRON projection.
 
-Concrete applications may extend these contracts with application-specific mechanics without changing the underlying world-generation architecture.
+The twelve prototypes extend these contracts with genre-specific mechanics without changing the underlying world-generation architecture.
 
 ## World representation
 
