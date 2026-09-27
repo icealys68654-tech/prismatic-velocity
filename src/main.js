@@ -4,7 +4,8 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { seedFromImage, PRISMATIC_SEED_VERSION } from "./seed.js";
 import { IntegrationCoordinator } from "./integrations.js";
-import { generateSourceWorld, elementColor, terrainHeightFromCell } from "./world-source.js";
+import { generateSourceWorld, elementColor } from "./world-source.js";
+import { buildWorldMesh } from "./world-mesh.js";
 
 const seed = await seedFromImage("./seed.png");
 const coordinator = new IntegrationCoordinator({
@@ -103,17 +104,28 @@ function makeTrack(){
 const track=makeTrack();
 
 function terrain(){
-  const g=new THREE.PlaneGeometry(5000,5000,63,63);
-  const pos=g.attributes.position;
-  for(let i=0;i<pos.count;i++){
-    const x = i % 64;
-    const y = Math.floor(i / 64);
-    const cell = world.grid[y]?.[x] ?? world.grid[0][0];
-    pos.setZ(i, terrainHeightFromCell(cell));
-  }
-  g.rotateX(-Math.PI/2);
-  const m=new THREE.MeshStandardMaterial({color:0x07121a,metalness:.05,roughness:.95});
-  const mesh=new THREE.Mesh(g,m); mesh.receiveShadow=true; scene.add(mesh);
+  const meshData = buildWorldMesh(world);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(meshData.vertices, 3));
+  g.setAttribute("color", new THREE.Float32BufferAttribute(meshData.colors, 3));
+  g.setIndex(meshData.indices);
+  g.computeVertexNormals();
+
+  const m = new THREE.MeshStandardMaterial({
+    vertexColors: true,
+    metalness: .08,
+    roughness: .88,
+  });
+  const mesh = new THREE.Mesh(g, m);
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+
+  console.info("PHASE_6_MESH", {
+    vertices: meshData.vertex_count,
+    triangles: meshData.triangle_count,
+    seed: meshData.source_seed,
+    algorithm: meshData.algorithm_version,
+  });
 }
 terrain();
 
