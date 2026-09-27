@@ -7,6 +7,7 @@ import { createGenreGame, getGenreCatalog } from "./genres.js";
 import { createGenreAdapters } from "../adapters/genre-adapters.js";
 import { createBoaPrismaticsAdapter } from "../adapters/boa-prismatics-adapter.js";
 import { createHolocronAdapter } from "../adapters/holocron-adapter.js";
+import { createGameRuntime } from "../game-runtime.js";
 
 /**
  * Phase 9 unified Prismatic Velocity API.
@@ -55,6 +56,11 @@ export function createPrismaticVelocityAPI(options = {}) {
       const sourceWorld = world ?? generateSourceWorld({});
       const route = buildTraversalRoute(sourceWorld, routeOptions);
       return createGenreGame({ genre, world: sourceWorld, route });
+    },
+
+    createGameRuntime({ genre = "action", world, routeOptions = {}, cellSize } = {}) {
+      const sourceWorld = world ?? generateSourceWorld({});
+      return createGameRuntime({ genre, world: sourceWorld, routeOptions, cellSize });
     },
 
     stepGame(game, input = {}) {
