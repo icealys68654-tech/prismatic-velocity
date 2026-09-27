@@ -214,6 +214,28 @@ DETERMINISTIC GAME SESSION
 
 The existing `src/api/genres.js` remains the concrete gameplay implementation for the project prototype. The new framework is the reusable abstraction boundary for other game implementations.
 
+## Twelve Browser Genre Prototypes
+
+Phase 12 adds a shared browser prototype surface at `genre.html`. It uses the same deterministic elemental world, traversal route, game runtime, and prismatic light field while giving each genre its own objective, input mapping, and 3D presentation.
+
+| Prototype | Concrete focus |
+|---|---|
+| Action | arena movement, combat, obstacles |
+| Platformer | vertical platforms and jumping |
+| Shooter | target-field encounters and firing |
+| RPG | exploration, quest progress, experience |
+| MMORPG | persistent-world style beacons and character state |
+| Action RPG | real-time combat plus progression |
+| Strategy | territory, planning, resources |
+| RTS | continuous bases, armies, resources |
+| TBS | deterministic turn-based tactics |
+| Adventure | exploration, landmarks, interaction |
+| Visual Novel | narrative scenes and deterministic choices |
+| Puzzle | pattern progression and spatial solving |
+
+Open `genre.html?genre=<genre>` to launch a specific prototype. The prototype catalog and runtime live in `src/genre-prototypes.js` and `src/genre-main.js`; they consume the generic genre contracts rather than moving racing logic into the framework.
+
+
 ### Explicit boundary
 
 The genre framework does **not** abstract or replace:
@@ -282,11 +304,12 @@ The application does not claim that the Python BOA runtime or a separate HOLOCRO
 | 11.3 | Complete | Deterministic prismatic light field |
 | 11.4 | Complete | Runtime-reactive prismatic light |
 | 11.5 | Implemented | Vectorized light flow |
-| Genre API | Implemented | Twelve genre contracts + BOA / HOLOCRON projection; CI pending for current changes |
+| Genre API | Implemented | Twelve genre contracts + BOA / HOLOCRON projection |
+| Phase 12 | Implemented | Twelve browser genre prototypes; CI verification follows |
 
 ### Current verification
 
-Latest genre-framework changes are verified by GitHub Actions with the same repository gates:
+The Phase 12 genre-prototype changes are implemented and are being verified by the same repository gates:
 
 ```text
 npm install
@@ -300,12 +323,15 @@ The README distinguishes implemented architecture from CI-verified completion.
 ```text
 .
 ├── index.html
+├── genre.html
 ├── seed.png
 ├── package.json
 ├── project.json
 ├── README.md
 └── src/
     ├── main.js
+    ├── genre-main.js
+    ├── genre-prototypes.js
     ├── seed.js
     ├── world-source.js
     ├── world-mesh.js
