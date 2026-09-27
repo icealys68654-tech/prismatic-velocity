@@ -5,6 +5,7 @@ import { runPhase10Tests } from "./tests-phase10.js";
 import { runPhase10AdapterTests } from "./tests-phase10-adapters.js";
 import { runPhase11Tests } from "./tests-phase11.js";
 import { runPhase11_2Tests } from "./tests-phase11-2.js";
+import { buildPrismaticLightField } from "./prismatic-light-field.js";
 
 export async function runReproducibilityTests() {
   const tests = [];
@@ -226,6 +227,22 @@ export async function runReproducibilityTests() {
   await runPhase10AdapterTests();
   await runPhase11Tests();
   await runPhase11_2Tests();
+
+  const lightWorld = generateSourceWorld({ seed: 0x10203040, width: 64, height: 64 });
+  const lightA = buildPrismaticLightField(lightWorld, { samples: 128, phase: 0.25 });
+  const lightB = buildPrismaticLightField(lightWorld, { samples: 128, phase: 0.25 });
+  const lightPassed = lightA.points.length === 128 &&
+    lightA.source_seed === lightB.source_seed &&
+    JSON.stringify(lightA) === JSON.stringify(lightB) &&
+    lightA.points.every((point) =>
+      point.color.every((value) => value >= 0 && value <= 1) &&
+      point.intensity >= 0 && point.intensity <= 1
+    );
+  tests.push({
+    name: "Phase 11.3 prismatic light field is deterministic and bounded",
+    passed: lightPassed,
+    message: lightPassed ? "✓ Light field verified" : "✗ Light field mismatch or out of bounds",
+  });
   return tests;
 }
 
