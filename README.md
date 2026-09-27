@@ -348,7 +348,7 @@ npm test
 
 Tests validate determinism and provenance contracts. GitHub Actions runs the same commands on every push and pull request.
 
-**Status**: Phases 1–11.3 are implemented in the application architecture. The deterministic runtime, framework/genre adapters, and prismatic light field are covered by the reproducibility suite. GitHub Actions remains the authoritative CI validation path and currently reports a green run #52 for commit `e8b74a4edb33bddddf50d2cc5f96d6810c1ad5e8`.
+**Status**: Phases 1–11.4 are implemented in the application architecture. The deterministic runtime, framework/genre adapters, and prismatic light field are covered by the reproducibility suite. GitHub Actions remains the authoritative CI validation path and currently reports a green run #56 for commit `cd11e8d475f9c973dde86b3d44424660987c319c`.
 
 ## License
 
@@ -360,6 +360,13 @@ GNU GENERAL PUBLIC LICENSE v3.0
 - **Prismatic Emergence**: Conceptual framework for artifact-driven content generation.
 - **Three.js**: Browser rendering adapter.
 
+
+### Phase 11.4: Runtime-Reactive Prismatic Light ✓
+
+- Runtime state now modulates the prismatic field through a deterministic proximity transform.
+- Light response carries runtime frame and route-index metadata without becoming gameplay authority.
+- Phase 11.4 tests verify repeatable runtime reaction and bounded intensity/proximity values.
+- GitHub Actions runs #54, #55, and #56 verified the real `npm install`, `npm test`, and `npm run build` gates successfully.
 
 ### Phase 11.3: Prismatic Spectacle of Light ✓
 
