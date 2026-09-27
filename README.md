@@ -1,187 +1,162 @@
-# Prismatic Velocity
+# PRISMATIC EMERGENCE
 
-Deterministic elemental world generation and a browser-playable 3D PC video-game prototype.
+**A deterministic world-and-game architecture for turning visual signals into reproducible worlds, game state, and spatial experiences.**
 
-> **Status:** Genre API abstraction and architecture boundaries are implemented and verified by GitHub Actions.
+> **A seed is a question. The map is its answer.**
 
-**Genre Contract → BOA / HOLOCRON Projection → Game Session**  
-**Artifact → Seed → Elemental Pressure → Terrain → Runtime → Prismatic Light → 3D World**
+PRISMATIC EMERGENCE treats an artifact or visual signal as an input to a deterministic transformation system. The system gathers source information, generates elemental pressure, organizes that pressure into spatial structures, exposes game-domain contracts, and projects the resulting state into interactive experiences.
 
-## Concept
+**Gather · Generate · Organize**
 
-**Prismatic Emergence** treats a visual artifact as a question and a generated world as its answer.
+The architecture is designed to remain useful across applications. A racing prototype is one specialized consumer. The twelve genre prototypes are reusable game-domain consumers. Neither defines the architecture itself.
 
-A seed drives a deterministic 64×64 elemental field. Each cell exposes water, fire, earth, and air pressure, which becomes terrain, traversal data, gameplay state, and finally a Three.js spectacle of light.
+## Architecture at a glance
 
-The design principle is:
+```text
+ARTIFACT / VISUAL SIGNAL
+        │
+        ▼
+DETERMINISTIC SEED
+        │
+        ▼
+ELEMENTAL PRESSURE
+        │
+        ▼
+64×64 MODAL GRID
+        │
+        ├──────────────► WORLD DATA / TERRAIN
+        │
+        ▼
+GAME-DOMAIN CONTRACTS
+        │
+        ▼
+DETERMINISTIC GAME STATE
+        │
+        ├──────────────► BOA PROJECTION
+        ├──────────────► HOLOCRON PROJECTION
+        └──────────────► APPLICATION RUNTIMES
+                                │
+                                ▼
+                         SPATIAL RENDERING
+                                │
+                                ▼
+                         PRISMATIC LIGHT
+                                │
+                                ▼
+                         INTERACTIVE WORLD
+                                │
+                                ▼
+                           CI VERIFICATION
+```
 
-> **Gather · Generate · Organize**
+The important boundary is that **world generation, game contracts, application runtimes, and rendering are separate concerns**.
 
-The artifact is preserved as the source signal; the generated structures remain inspectable and reproducible.
-
-## Vectored Process
+## The Vectored Process
 
 ```text
 110101011
     ↓
-ARTIFACT / VISUAL SIGNAL
+GATHER
+    ↓
+TRANSMUTATION CUBE
     ↓
 DETERMINISTIC SEED
     ↓
 ELEMENTAL PRESSURE FIELD
     ↓
-64×64 MODAL GRID
+MODAL GRID
     ↓
-TERRAIN + MESH
+WORLD REPRESENTATION
     ↓
-TRAVERSAL ROUTE
+GAME CONTRACT
     ↓
-GAME RUNTIME
+RUNTIME STATE
     ↓
 PRISMATIC LIGHT FIELD
     ↓
-THREE.JS / BLOOM / CRYSTALS
+SPATIAL PROJECTION
     ↓
-CI VERIFICATION
+CI GATE
 ```
 
-The runtime owns gameplay state. Rendering projects that state into the scene. CI verifies the deterministic contracts.
+The process is intentionally inspectable. Each stage consumes structured data and produces a deterministic representation that can be tested independently.
 
-## Architecture
-
-## Architecture Boundaries
-
-The project is organized into three deliberately separate domains. The **genre framework is an API abstraction**, not a replacement for the project's deterministic world generator or its racing-specific renderer.
-
-```text
-                         PRISMATIC VELOCITY
-                                │
-             ┌──────────────────┼──────────────────┐
-             │                  │                  │
-             ▼                  ▼                  ▼
-     WORLD GENERATION     GENRE / GAME API   RACING / RENDERING
-             │                  │                  │
-     artifact → seed      genre contracts      terrain mesh
-     elemental pressure   game sessions        traversal route
-     64×64 modal grid     BOA / HOLOCRON       player runtime
-             │            projections           Three.js
-             │                  │                  │
-             └─────────── data/state ─────────────┘
-```
-
-### 1. Deterministic elemental world generation
-
-This is the **world-source domain**. It transforms an artifact and seed into reproducible elemental data.
-
-Responsibilities include:
-- artifact / seed interpretation;
-- deterministic water, fire, earth, and air pressure;
-- 64×64 modal-grid generation;
-- element classification;
-- elevation and material data;
-- provenance and algorithm-version metadata.
-
-Primary modules:
-- `src/seed.js`
-- `src/world-source.js`
-
-The genre framework does **not** generate or own this world. A genre implementation may consume world data when the application chooses to bind the two systems.
-
-### 2. Browser-playable video-game genre framework
-
-This is the **game-domain abstraction**. It describes reusable contracts for the supported video-game genres without assuming that every game is a racing game or even that a generated elemental world exists.
-
-Primary abstraction:
-- `src/api/genre-framework.js`
-
-Supported contracts:
-- Action
-- Platformer
-- Shooter
-- RPG
-- MMORPG
-- Action RPG
-- Strategy
-- RTS
-- TBS
-- Adventure
-- Visual Novel
-- Puzzle
-
-The framework provides:
-- genre metadata and mechanics;
-- deterministic game sessions;
-- genre state transitions;
-- BOA projection;
-- HOLOCRON abstraction projection.
-
-The browser-playable application can then select a concrete genre implementation. `src/api/genres.js` remains the project's current concrete gameplay implementation, while `genre-framework.js` defines the reusable contract boundary.
-
-### 3. Racing-specific terrain, traversal, and renderer
-
-The racing prototype is a **specialized consumer** of the other domains. Its terrain, traversal, player controls, runtime, and Three.js projection are not part of the generic genre framework.
-
-Primary modules include:
-- `src/world-mesh.js` — terrain mesh construction;
-- `src/traversal.js` — deterministic route construction;
-- `src/game-runtime.js` — runtime state boundary;
-- `src/player-controller.js` — player motion;
-- `src/input-controller.js` — browser input;
-- `src/runtime-renderer.js` — runtime-to-render projection;
-- `src/prismatic-light-field.js` — prismatic visual field;
-- `src/main.js` — browser / Three.js application.
-
-The racing prototype may use the genre contracts, but the generic genre framework must remain usable without importing racing terrain, traversal, or renderer code.
-
-### Dependency direction
-
-```text
-GENRE FRAMEWORK
-     │
-     ├── BOA contract projection
-     └── HOLOCRON contract projection
-
-WORLD GENERATOR ────────► optional game/world data
-
-RACING PROTOTYPE
-     ├── world generator output
-     ├── genre/game runtime
-     ├── terrain + traversal
-     └── Three.js renderer
-
-Constraint:
-genre-framework.js → must not depend on racing renderer
-genre-framework.js → must not generate elemental worlds
-racing renderer    → consumes runtime state; does not own game rules
-```
-
-This separation keeps the reusable game-genre API portable while preserving the project's specialized deterministic elemental-world and racing systems.
-## Core Contracts
+## Core principles
 
 ### Determinism
 
-Same artifact + same seed + same algorithm version produces the same generated world.
+The same artifact, seed, dimensions, and algorithm version produce the same generated structures.
 
 ```js
-const a = generateSourceWorld({ seed: 0x12345678 });
-const b = generateSourceWorld({ seed: 0x12345678 });
+const a = generateSourceWorld({
+  artifact: "seed.png",
+  seed: 0x12345678,
+  width: 64,
+  height: 64,
+});
+
+const b = generateSourceWorld({
+  artifact: "seed.png",
+  seed: 0x12345678,
+  width: 64,
+  height: 64,
+});
 
 console.assert(JSON.stringify(a.grid) === JSON.stringify(b.grid));
 ```
 
-Different seeds are expected to produce different generated fields except for intentional collisions.
+Different seeds are expected to produce different fields except where intentional collisions occur.
 
 ### Provenance
 
-Generated worlds carry their source seed, algorithm version, grid resolution, generator identity, and source artifact metadata.
+Generated structures retain information describing their origin, including source seed, algorithm version, resolution, generator identity, and source metadata.
 
-### Renderer separation
+### Inspectability
 
-World generation, traversal, and gameplay state do not depend on Three.js. The renderer consumes deterministic runtime state and projects it into the browser scene.
+The elemental field is represented as explicit cells rather than hidden renderer state. Cells expose coordinates, classification, elevation, elemental pressures, and region information.
 
-## Genre API Abstraction
+### Separation of concerns
 
-The genre framework is intentionally separate from deterministic elemental world generation and the browser racing prototype. It provides a portable API contract for twelve supported game genres and projects genre state through the browser-safe BOA and HOLOCRON adapters.
+World generation does not depend on a particular game genre. Game contracts do not depend on a particular renderer. Rendering consumes runtime state rather than owning gameplay rules.
+
+### Composability
+
+The architecture allows an application to combine world data, a game contract, a runtime, and a renderer without turning any one application into the definition of the system.
+
+## Architectural domains
+
+PRISMATIC EMERGENCE is organized into four principal domains.
+
+### 1. Deterministic world domain
+
+The world domain transforms an artifact and seed into reproducible elemental spatial data.
+
+Responsibilities:
+
+- artifact and seed interpretation;
+- deterministic water, fire, earth, and air pressure;
+- modal-grid generation;
+- element classification;
+- elevation and material data;
+- provenance and algorithm-version metadata.
+
+Primary modules include:
+
+- `src/seed.js`
+- `src/world-source.js`
+- `src/world-mesh.js`
+
+The world domain produces reusable data. It does not decide what kind of game or application consumes that data.
+
+### 2. Game-domain abstraction
+
+The game domain defines reusable contracts for game genres and deterministic sessions.
+
+Primary abstraction:
+
+- `src/api/genre-framework.js`
+
+The current contract catalog includes:
 
 | Genre | Family | Contract focus |
 |---|---|---|
@@ -198,143 +173,232 @@ The genre framework is intentionally separate from deterministic elemental world
 | Visual Novel | Adventure | Dialogue, artwork, choices |
 | Puzzle | Puzzle | Logic, patterns, spatial problem solving |
 
-The framework lives in `src/api/genre-framework.js`. It exposes genre contracts, deterministic sessions, and BOA / HOLOCRON projection without importing world generation, traversal, or racing code.
+These are **contracts**, not the architecture's identity. Additional game implementations can consume the same abstraction without changing the world generator.
+
+### 3. Runtime domain
+
+The runtime domain converts contracts and inputs into deterministic state transitions.
+
+Relevant boundaries include:
+
+- `src/genre-prototype-runtime.js`
+- `src/api/genres.js`
+- `src/game-runtime.js`
+- `src/player-controller.js`
+- `src/input-controller.js`
+
+The runtime owns state such as position, progression, actions, resources, encounters, choices, or other mechanics appropriate to a selected contract.
+
+A runtime may consume generated world data, but the generic game contract remains portable.
+
+### 4. Presentation domain
+
+The presentation domain projects runtime state into visual and spatial experiences.
+
+Relevant modules include:
+
+- `src/runtime-renderer.js`
+- `src/prismatic-light-field.js`
+- `src/main.js`
+- `src/genre-main.js`
+
+Three.js is a presentation technology, not a gameplay authority.
+
+The prismatic light field converts elemental pressure and runtime context into visual information:
+
+```text
+ELEMENTAL PRESSURE
+        ↓
+COLOR + INTENSITY
+        ↓
+PRISMATIC LIGHT FIELD
+        ↓
+PARTICLES / CRYSTALS / BLOOM
+        ↓
+SPATIAL EXPERIENCE
+```
+
+## Dependency direction
+
+The architecture intentionally permits specialization at the edges while preserving reusable central contracts.
+
+```text
+                    PRISMATIC EMERGENCE
+                           │
+          ┌────────────────┼────────────────┐
+          ▼                ▼                ▼
+   WORLD DOMAIN       GAME DOMAIN      PRESENTATION
+          │                │                │
+          │         genre contracts         │
+          │                │                │
+          └────────────┬───┴────┬───────────┘
+                       │        │
+                       ▼        ▼
+                 APPLICATION RUNTIMES
+                       │
+                       ▼
+                  USER EXPERIENCE
+```
+
+Constraints:
+
+- the game framework must not depend on a specific application;
+- the world generator must not depend on a specific game genre;
+- rendering must consume runtime state rather than own game rules;
+- adapters may translate external contracts but must not erase domain boundaries;
+- an application may specialize the architecture without becoming the architecture.
+
+## Genre-domain projections
+
+The game-domain abstraction can project deterministic state through browser-safe adapters.
 
 ```text
 GENRE CONTRACT
-      ↓
+      │
+      ▼
 DETERMINISTIC GAME SESSION
-      ↓
-   ┌──┴─────────────┐
-   ↓                ↓
- BOA            HOLOCRON
-   ↓                ↓
-   └──── GAME STATE ┘
+      │
+      ├──────────────► BOA
+      │
+      └──────────────► HOLOCRON
+             │
+             ▼
+         GAME STATE
 ```
 
-The existing `src/api/genres.js` remains the concrete gameplay implementation for the project prototype. The new framework is the reusable abstraction boundary for other game implementations.
-
-## Phase 13 — Independent Genre Runtime
-
-The 12 browser genre prototypes now run through `src/genre-prototype-runtime.js`, an independent runtime boundary built on the genre game contracts. The racing-oriented `src/game-runtime.js` remains a specialized consumer and is no longer required to instantiate the generic genre prototypes.
-
-Dependency direction:
-
-```text
-Deterministic World
-       │
-       ├──────────────► Genre Prototype Runtime ──► 12 Genre Prototypes
-       │
-       └──────────────► Racing Runtime ──► Racing Renderer
-```
-
-This makes the genre prototypes concrete applications of the PRISMATIC EMERGENCE architecture rather than alternate names for the racing implementation.
-
-## Twelve Browser Genre Prototypes
-
-Phase 12 adds a shared browser prototype surface at `genre.html`. It uses the same deterministic elemental world, traversal route, game runtime, and prismatic light field while giving each genre its own objective, input mapping, and 3D presentation.
-
-| Prototype | Concrete focus |
-|---|---|
-| Action | arena movement, combat, obstacles |
-| Platformer | vertical platforms and jumping |
-| Shooter | target-field encounters and firing |
-| RPG | exploration, quest progress, experience |
-| MMORPG | persistent-world style beacons and character state |
-| Action RPG | real-time combat plus progression |
-| Strategy | territory, planning, resources |
-| RTS | continuous bases, armies, resources |
-| TBS | deterministic turn-based tactics |
-| Adventure | exploration, landmarks, interaction |
-| Visual Novel | narrative scenes and deterministic choices |
-| Puzzle | pattern progression and spatial solving |
-
-Open `genre.html?genre=<genre>` to launch a specific prototype. The prototype catalog and runtime live in `src/genre-prototypes.js` and `src/genre-main.js`; they consume the generic genre contracts rather than moving racing logic into the framework.
-
-
-### Explicit boundary
-
-The genre framework does **not** abstract or replace:
-
-- deterministic elemental world generation;
-- the browser-playable 3D racing prototype;
-- the generated terrain, traversal, or racing renderer.
-
-Those remain project-specific systems and can consume the genre contracts without becoming dependencies of them.
-
-## Gameplay Runtime
-
-The runtime is built around a deterministic traversal route.
-
-- **Action / racing:** real-time route traversal and player actions.
-- **Platformer / shooter:** the same spatial route provides movement and action state.
-- **RPG / MMORPG / action RPG:** route nodes provide deterministic exploration and progression state.
-- **Strategy / RTS / TBS:** route cells provide a deterministic tactical substrate.
-- **Adventure / visual novel:** route nodes can anchor exploration and narrative state.
-- **Puzzle:** route geometry provides a deterministic spatial substrate.
-
-The genre layer is exposed through `src/api/genres.js`, while `src/game-runtime.js` remains the runtime state boundary.
-
-## Prismatic Light
-
-The current light system converts elemental pressure into deterministic RGB values and projects sampled points into the scene.
-
-Phase 11.4 adds runtime reaction:
-
-```text
-RUNTIME POSITION
-      ↓
-PROXIMITY FIELD
-      ↓
-LIGHT INTENSITY
-      ↓
-ADDITIVE POINT LIGHT
-      ↓
-BLOOM / SPECTACLE
-```
-
-The light field is visual state; gameplay authority remains in the runtime.
-
-### Architecture verification
-
-The genre abstraction and the shared genre-contract refactor have passed the repository CI gates. The architecture remains intentionally separated into world generation, generic genre/game API, and racing-specific terrain/traversal/rendering.
-
-## Framework Boundaries
-
-The project contains browser-safe application projections of the public contracts needed from:
+The project contains browser-side projections of the public contracts used from:
 
 - [BOA BIG API Framework](https://github.com/somsung46813-creator/boa-bigapi-framework)
 - [HOLOCRON Abstraction SDK](https://github.com/somsung46813-creator/HOLOCRON-Abstraction-SDK)
 
-The application does not claim that the Python BOA runtime or a separate HOLOCRON emulator executes directly inside the browser. Their contracts are isolated behind local adapters.
+The adapters preserve the relevant public contracts without claiming that external Python runtimes or separate native execution environments run directly inside the browser.
 
-## Status to Completion
+## Applications are consumers
 
-| Phase | State | Verified gate |
-|---|---|---|
-| 1–7 | Complete | Deterministic generation, pressure field, mesh, continuity |
-| 8–9 | Complete | Traversal and unified API contracts |
-| 10 | Complete | Major genre gameplay contracts |
-| 11 | Complete | Deterministic gameplay runtime |
-| 11.2 | Complete | Input + renderer bridge |
-| 11.3 | Complete | Deterministic prismatic light field |
-| 11.4 | Complete | Runtime-reactive prismatic light |
-| 11.5 | Implemented | Vectorized light flow |
-| Genre API | Implemented | Twelve genre contracts + BOA / HOLOCRON projection |
-| Phase 12 | Implemented | Twelve browser genre prototypes; CI verification follows |
+Applications sit at the edge of the architecture.
 
-### Current verification
+A racing implementation can consume:
 
-The Phase 12 genre-prototype changes are implemented and are being verified by the same repository gates:
+- deterministic elemental world data;
+- terrain mesh data;
+- traversal data;
+- a game contract;
+- runtime state;
+- prismatic presentation.
+
+A different application can consume the same world and game-domain abstractions without adopting racing-specific systems.
+
+Likewise, the twelve current genre prototypes demonstrate how different game contracts can consume the architecture:
 
 ```text
+                  PRISMATIC EMERGENCE
+                          │
+                  ┌───────┴───────┐
+                  │               │
+             WORLD DATA       GAME CONTRACTS
+                  │               │
+                  └───────┬───────┘
+                          ▼
+                  APPLICATION RUNTIMES
+                    /     |      \
+                   /      |       \
+              Racing   Genre A   Genre B ...
+```
+
+The applications are examples of composition, not dependencies of the core architecture.
+
+## Deterministic game sessions
+
+The generic genre framework provides deterministic sessions:
+
+```js
+const session = createGenreSession({
+  genre: "puzzle",
+  id: "session-1",
+});
+
+session.dispatch({
+  type: "advance",
+  state: { score: 10 },
+});
+
+console.log(session.getState());
+```
+
+The framework exposes:
+
+- genre contracts;
+- supported mechanics;
+- deterministic session creation;
+- state transitions;
+- BOA projection;
+- HOLOCRON projection.
+
+Concrete applications may extend these contracts with application-specific mechanics without changing the underlying world-generation architecture.
+
+## World representation
+
+The current world generator uses a 64×64 modal grid.
+
+Each cell can carry:
+
+- `x`, `y` coordinates;
+- elemental classification;
+- water pressure;
+- fire pressure;
+- earth pressure;
+- air pressure;
+- elevation;
+- material / region information.
+
+The elemental pressures form the basis for terrain, visual composition, traversal or other application-specific interpretations.
+
+The same deterministic world can therefore become different experiences without changing the source signal.
+
+## Prismatic emergence
+
+The central abstraction is a phase transformation:
+
+```text
+COLOR
+  │
+  ├──────────► ELEMENTAL PRESSURE
+  │
+GEOMETRY
+  │
+  ├──────────► SPATIAL STRUCTURE
+  │
+SPATIAL
+  │
+  └──────────► WORLD / GAME STATE
+```
+
+The transmutation cube is a conceptual boundary for gathering these signals. The generated seed becomes the reproducible identity of the resulting world.
+
+**A seed is a question.  
+The map is its answer.**
+
+## Verification
+
+The repository uses the same deterministic gates locally and in GitHub Actions:
+
+```bash
 npm install
 npm test
 npm run build
 ```
 
-The README distinguishes implemented architecture from CI-verified completion.
-## Project Structure
+The CI workflow validates:
+
+1. dependency installation;
+2. deterministic reproducibility tests;
+3. build integrity.
+
+The tests cover the world generator, game contracts, runtime behavior, genre prototypes, integrations, traversal and prismatic systems.
+
+A change is not considered complete merely because source code exists. The repository's actual CI gates must pass.
+
+## Project structure
 
 ```text
 .
@@ -348,6 +412,7 @@ The README distinguishes implemented architecture from CI-verified completion.
     ├── main.js
     ├── genre-main.js
     ├── genre-prototypes.js
+    ├── genre-prototype-runtime.js
     ├── seed.js
     ├── world-source.js
     ├── world-mesh.js
@@ -371,15 +436,19 @@ The README distinguishes implemented architecture from CI-verified completion.
     └── tests*.js
 ```
 
-## Quick Start
+## Quick start
 
-The browser application uses ES modules and should be served through HTTP.
+Serve the browser application through HTTP:
 
 ```bash
 python -m http.server 8080
 ```
 
-Open `http://localhost:8080/` in a WebGL-capable browser.
+Then open:
+
+```text
+http://localhost:8080/
+```
 
 For repository verification:
 
@@ -389,40 +458,9 @@ npm test
 npm run build
 ```
 
-GitHub Actions runs the same gates on pushes to `main` and pull requests.
+## Development loop
 
-## Controls
-
-| Key | Action |
-|---|---|
-| `W` | Accelerate |
-| `S` | Brake |
-| `A` / `D` | Steer |
-| `Left Shift` | Nitro |
-| `Space` | Fire |
-| `R` | Reset |
-
-## Deterministic API Example
-
-```js
-import { generateSourceWorld } from "./src/world-source.js";
-
-const world = generateSourceWorld({
-  artifact: "seed.png",
-  seed: 0x12345678,
-  width: 64,
-  height: 64,
-});
-
-console.log(world.provenance);
-console.log(world.grid[32][32]);
-```
-
-Each cell exposes coordinates, element classification, elevation, elemental pressures, and region metadata.
-
-## Development Rule
-
-The `++1` / `1++` process means:
+The project's `++1` / `1++` process is a deterministic development gate:
 
 ```text
 CONFIRM CURRENT CHANGES
@@ -438,17 +476,27 @@ IF GREEN → UPDATE README STATUS
 CONTINUE
 ```
 
-No phase is marked complete merely because code exists. Completion requires the repository's real runtime and build gates to pass.
+The purpose is to keep architecture, implementation, documentation, and verification synchronized.
+
+## Status
+
+PRISMATIC EMERGENCE is an evolving deterministic world-and-game architecture.
+
+The repository currently contains:
+
+- deterministic elemental world generation;
+- provenance and reproducibility contracts;
+- a reusable genre-domain abstraction;
+- twelve genre contracts;
+- deterministic genre sessions;
+- independent genre prototype runtime mechanics;
+- browser-safe BOA and HOLOCRON projections;
+- reusable prismatic visual systems;
+- application-specific consumers, including racing;
+- automated reproducibility and build gates.
+
+The architecture is intentionally broader than any one application.
 
 ## License
 
 GNU General Public License v3.0.
-
-
-## Phase 14 — Genre-Specific Mechanics
-
-Phase 14 is implemented and verified by GitHub Actions. The 12 browser prototypes now execute distinct deterministic mechanics inside `src/genre-prototype-runtime.js` rather than delegating gameplay state transitions to the racing game implementation.
-
-The runtime separates action, platformer, shooter, RPG, MMORPG, action-RPG, strategy, RTS, TBS, adventure, visual-novel, and puzzle state transitions while continuing to consume the deterministic elemental world as a shared substrate.
-
-**Status:** Phase 14 genre-specific mechanics are implemented and the real CI reproducibility/build gates are green.
