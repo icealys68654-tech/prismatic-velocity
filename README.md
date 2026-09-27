@@ -214,6 +214,22 @@ DETERMINISTIC GAME SESSION
 
 The existing `src/api/genres.js` remains the concrete gameplay implementation for the project prototype. The new framework is the reusable abstraction boundary for other game implementations.
 
+## Phase 13 — Independent Genre Runtime
+
+The 12 browser genre prototypes now run through `src/genre-prototype-runtime.js`, an independent runtime boundary built on the genre game contracts. The racing-oriented `src/game-runtime.js` remains a specialized consumer and is no longer required to instantiate the generic genre prototypes.
+
+Dependency direction:
+
+```text
+Deterministic World
+       │
+       ├──────────────► Genre Prototype Runtime ──► 12 Genre Prototypes
+       │
+       └──────────────► Racing Runtime ──► Racing Renderer
+```
+
+This makes the genre prototypes concrete applications of the PRISMATIC EMERGENCE architecture rather than alternate names for the racing implementation.
+
 ## Twelve Browser Genre Prototypes
 
 Phase 12 adds a shared browser prototype surface at `genre.html`. It uses the same deterministic elemental world, traversal route, game runtime, and prismatic light field while giving each genre its own objective, input mapping, and 3D presentation.
