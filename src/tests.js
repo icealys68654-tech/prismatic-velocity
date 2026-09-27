@@ -5,6 +5,7 @@ import { runPhase10Tests } from "./tests-phase10.js";
 import { runPhase10AdapterTests } from "./tests-phase10-adapters.js";
 import { runPhase11Tests } from "./tests-phase11.js";
 import { runPhase11_2Tests } from "./tests-phase11-2.js";
+import { runGenreFrameworkTests } from "./tests-genre-framework.js";
 import { buildPrismaticLightField, reactPrismaticLightField, flowPrismaticLightField } from "./prismatic-light-field.js";
 
 export async function runReproducibilityTests() {
@@ -227,6 +228,12 @@ export async function runReproducibilityTests() {
   await runPhase10AdapterTests();
   await runPhase11Tests();
   await runPhase11_2Tests();
+  const genreFrameworkMessage = await runGenreFrameworkTests();
+  tests.push({
+    name: "Genre framework abstracts all supported genres through linked APIs",
+    passed: genreFrameworkMessage === "Genre framework tests passed",
+    message: genreFrameworkMessage === "Genre framework tests passed" ? "✓ Genre framework verified" : "✗ Genre framework failed",
+  });
 
   const lightWorld = generateSourceWorld({ seed: 0x10203040, width: 64, height: 64 });
   const lightA = buildPrismaticLightField(lightWorld, { samples: 128, phase: 0.25 });
