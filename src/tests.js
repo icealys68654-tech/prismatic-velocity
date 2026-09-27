@@ -12,18 +12,19 @@ import { buildPrismaticLightField, reactPrismaticLightField, flowPrismaticLightF
 export async function runReproducibilityTests() {
   const tests = [];
 
-  // Test 1: Same seed produces identical grid
+  // Test 1: Same seed and spatial dimensions produce identical grid
   const test1 = () => {
     const seed = 0x12345678;
-    const w1 = generateSourceWorld({ seed, width: 64, height: 64 });
-    const w2 = generateSourceWorld({ seed, width: 64, height: 64 });
+    const dimensions = { width: 17, height: 11 };
+    const w1 = generateSourceWorld({ seed, ...dimensions });
+    const w2 = generateSourceWorld({ seed, ...dimensions });
 
     const grid1 = JSON.stringify(w1.grid);
     const grid2 = JSON.stringify(w2.grid);
     const passed = grid1 === grid2;
 
     return {
-      name: "Same seed produces identical grid",
+      name: "Same seed and dimensions produce identical grid",
       passed,
       message: passed ? "✓ Determinism verified" : "✗ Grid mismatch",
     };
@@ -47,13 +48,13 @@ export async function runReproducibilityTests() {
   };
   tests.push(test2());
 
-  // Test 3: Provenance metadata is present and valid
+  // Test 3: Provenance metadata carries the requested spatial dimensions
   const test3 = () => {
-    const world = generateSourceWorld({ seed: 0xdeadbeef });
+    const world = generateSourceWorld({ seed: 0xdeadbeef, width: 23, height: 9 });
     const prov = world.provenance;
     const passed = prov.seed &&
                    prov.algorithm_version === "3" &&
-                   prov.grid_resolution === "64x64" &&
+                   prov.grid_resolution === "23x9" &&
                    prov.generator &&
                    prov.generated_at;
 
@@ -65,16 +66,20 @@ export async function runReproducibilityTests() {
   };
   tests.push(test3());
 
-  // Test 4: Grid dimensions are correct
+  // Test 4: Parameterized grid dimensions are preserved
   const test4 = () => {
-    const world = generateSourceWorld({ seed: 0x99999999, width: 64, height: 64 });
-    const passed = world.grid.length === 64 &&
-                   world.grid.every((row) => row.length === 64);
+    const world = generateSourceWorld({ seed: 0x99999999, width: 13, height: 7 });
+    const passed = world.width === 13 &&
+                   world.height === 7 &&
+                   world.grid.length === 7 &&
+                   world.grid.every((row) => row.length === 13) &&
+                   world.heightfield.length === 7 &&
+                   world.heightfield.every((row) => row.length === 13);
 
     return {
-      name: "Grid dimensions are 64x64",
+      name: "Parameterized grid and heightfield dimensions are preserved",
       passed,
-      message: passed ? "✓ Dimensions correct" : "✗ Dimension mismatch",
+      message: passed ? "✓ Dimensions correct: 13x7" : "✗ Dimension mismatch",
     };
   };
   tests.push(test4());
@@ -181,11 +186,11 @@ export async function runReproducibilityTests() {
 
   // Test 11: Phase 6 mesh is deterministic and topologically complete
   const test11 = () => {
-    const world = generateSourceWorld({ seed: 0x2468ace0, width: 64, height: 64 });
+    const world = generateSourceWorld({ seed: 0x2468ace0, width: 13, height: 7 });
     const mesh1 = buildWorldMesh(world);
     const mesh2 = buildWorldMesh(world);
-    const expectedVertices = 64 * 64;
-    const expectedTriangles = (64 - 1) * (64 - 1) * 2;
+    const expectedVertices = 13 * 7;
+    const expectedTriangles = (13 - 1) * (7 - 1) * 2;
     const passed = mesh1.vertex_count === expectedVertices &&
                    mesh1.triangle_count === expectedTriangles &&
                    mesh1.vertices.length === expectedVertices * 3 &&
@@ -206,13 +211,13 @@ export async function runReproducibilityTests() {
 
   // Test 12: Phase 7 mesh preserves deterministic spatial continuity metadata
   const test12 = () => {
-    const world = generateSourceWorld({ seed: 0x13579bdf, width: 64, height: 64 });
+    const world = generateSourceWorld({ seed: 0x13579bdf, width: 13, height: 7 });
     const mesh1 = buildWorldMesh(world);
     const mesh2 = buildWorldMesh(world);
     const finite = mesh1.vertices.every((value) => Number.isFinite(value));
     const bounded = mesh1.vertices.every((value, i) => i % 3 !== 1 || value >= -52 && value <= 172);
     const passed = finite && bounded && mesh1.transition_count >= 0 &&
-                   mesh1.transition_count <= (63 * 64) + (64 * 63) &&
+                   mesh1.transition_count <= (12 * 7) + (13 * 6) &&
                    JSON.stringify(mesh1) === JSON.stringify(mesh2);
     return {
       name: "Phase 7 mesh continuity is deterministic and bounded",
